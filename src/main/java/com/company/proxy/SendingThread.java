@@ -1,80 +1,64 @@
 package com.company.proxy;
 
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.Arrays;
 
+import static com.company.proxy.ProxyApplication.connectToRobot;
 import static java.lang.System.out;
 
-public class SendingThread extends Thread implements KeyListener {
-    byte[] dataToSend = new byte[]{(byte) 0xFF, (byte) 0x07, (byte) 0xC8, (byte) 0x00, (byte) 0xC8, (byte) 0x00, (byte) 0x53, (byte) 0x21, (byte) 0xBF};
-    private final int SPEED = 100;
+public class SendingThread extends Thread {
+    byte[] dataToSend;
+    private final int SPEED = 200;
     OutputStream outputStream;
     private Boolean shouldISend;
 
     private String command;
     private Socket socket;
 
+    //    Parameter constructor
     public SendingThread(OutputStream outputStream, Socket socket) {
         this.outputStream = outputStream;
         this.shouldISend = true;
         this.command = "nothing";
+        this.dataToSend = giveMeNothing();
         this.socket = socket;
-        out.println("[Sending thread made up]");
+        out.println("[Server] Sending thread made up");
+
     }
 
     // Main sending logic inside Run() method. It only sends if the command is not "nothing"
     @Override
     public void run() {
         while (shouldISend) {
-            if (!command.equals("nothing")) {
-                System.out.println("[Sending]");
-                try {
-                    // Sending data
-                    outputStream.write(dataToSend);
-                    outputStream.flush();
-                    out.print("Sending: " + Arrays.toString(dataToSend));
-                    Thread.sleep(50);
-                }
-                // Check for the disconnection of the robot
-                catch (SocketException e) {
-                    if (e.getMessage().equals("Broken pipe")) {
-                        // handle Broken pipe error
-                        System.out.println("Broken pipe error occurred; Reconnecting");
-                    } else {
-                        // handle other SocketException errors
-                        e.printStackTrace();
-                    }
-                } catch (Exception e) {
-                    // handle other exceptions
-                    e.printStackTrace();
-                    setShouldISend(false);
-                    out.println("Ending sending");
-                }
+            try {
+                // Sending data
+                outputStream.write(dataToSend);
+                outputStream.flush();
+                out.println("[Server] Sending: " + command + ", " + Arrays.toString(dataToSend));
+                Thread.sleep(25);
             }
-            if (command.equals("nothing")) {
-                System.out.println("[Nothing]");
-                try {
-                    // Sending data
-                    outputStream.write(giveMeNothing());
-                    outputStream.flush();
-                    out.print("(nothing): " + Arrays.toString(giveMeNothing()));
-                    Thread.sleep(900);
-                } catch (Exception e) {
-                    // handle other exceptions
+            // Check for the disconnection of the robot
+            catch (SocketException e) {
+                if (e.getMessage().equals("[Server] Broken pipe")) {
+                    // handle Broken pipe error
+                    System.out.println("[Server] Broken pipe error occurred; Reconnecting");
+                    connectToRobot();
+                } else {
+                    // handle other SocketException errors
                     e.printStackTrace();
-                    setShouldISend(false);
-                    out.println("Ending sending");
                 }
+            } catch (Exception e) {
+                // handle other exceptions
+                e.printStackTrace();
+                setShouldISend(false);
+                out.println("[Server] Ending sending");
             }
         }
-
     }
 
-    // Command methods
+    // Robot commands
     public void forward() {
         System.out.println("Forward: " + SPEED);
         byte[] newCommand = new byte[9];
@@ -218,7 +202,7 @@ public class SendingThread extends Thread implements KeyListener {
 
     public void setCommand(String command) {
         this.command = command;
-        out.println("Command now is: " + this.command + "; shouldISend is: " + shouldISend);
+        out.println("[Server] Command now is: " + this.command + "; shouldISend is: " + shouldISend);
     }
 
     public Socket getSocket() {
@@ -227,20 +211,5 @@ public class SendingThread extends Thread implements KeyListener {
 
     public void setSocket(Socket socket) {
         this.socket = socket;
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
     }
 }
