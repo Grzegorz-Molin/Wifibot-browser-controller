@@ -1,5 +1,9 @@
 package com.company.proxy;
 
+import com.company.proxy.controller.ClientController;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -10,17 +14,23 @@ import static java.lang.System.out;
 public class ReadingThread extends Thread {
     InputStream inputStream;
     private Boolean shouldIRead;
+    private ClientController clientController;
+
+    @Autowired
+    private ApplicationContext context;
 
     public ReadingThread(InputStream inputStream) {
 
         this.inputStream = inputStream;
+        //  Adding a reference to (already existing) Client controller to be able to pass the robot data to client
+        this.clientController = CustomContextAware.getContext().getBean(ClientController.class);
         shouldIRead = true;
-        out.println("[Reading thread made up]");
+        out.println("[Server] Reading thread made up");
     }
 
     @Override
     public void run() {
-        out.println("[Receiving]");
+        out.println("[Server] Receiving");
 
         while (shouldIRead) {
             try {
@@ -41,9 +51,11 @@ public class ReadingThread extends Thread {
                         dataInLongs.add(Long.parseLong(string, 16));
                     }
 
-                    System.out.print("Received longs: " + dataInLongs + "\r");
+                    System.out.print("[Server] Received longs: " + dataInLongs + "\r");
+                    clientController.sendRobotDataToClient(dataInLongs);
+                    Thread.sleep(50);
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
         }

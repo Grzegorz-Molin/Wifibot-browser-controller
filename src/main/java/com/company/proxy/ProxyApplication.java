@@ -2,6 +2,9 @@ package com.company.proxy;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -14,6 +17,8 @@ import static java.lang.System.out;
 public class ProxyApplication {
     private static String ROBOT_IP = "192.168.1.106";
     private static int PORT = 15020;
+
+    public static ConfigurableApplicationContext context;
 
     // Status variables
     static Boolean botConnected = false;
@@ -76,11 +81,11 @@ public class ProxyApplication {
     public static void disconnectFromRobot() throws IOException {
         try {
             actualCommand = "stop";
-            readingThread.setShouldIRead(false);
-            inputStream.close();
-            outputStream.close();
-            socket.close();
+            if (inputStream != null) inputStream.close();
+            if (outputStream != null) outputStream.close();
+            if (socket.isConnected()) socket.close();
             botConnected = false;
+            readingThread.setShouldIRead(false);
             sendingThread.setShouldISend(false);
             out.println("Socket closed");
         } catch (IOException e) {
@@ -98,8 +103,7 @@ public class ProxyApplication {
 
 
     public static void main(String[] args) {
-        SpringApplication.run(ProxyApplication.class, args);
-
+        ConfigurableApplicationContext context = SpringApplication.run(ProxyApplication.class, args);
     }
 
 }

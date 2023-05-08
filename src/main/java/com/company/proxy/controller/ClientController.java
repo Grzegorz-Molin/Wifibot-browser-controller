@@ -8,6 +8,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
+import java.util.List;
 
 import static com.company.proxy.ProxyApplication.*;
 
@@ -20,7 +21,7 @@ public class ClientController {
 
     @MessageMapping("/connectToRobot") // = app/connectToRobot ---> Receiving
     @SendTo("/topic/bot") // = /topic/bot ---> Sending
-    public Message clientRequestForConnectingToRobot(){
+    public Message clientRequestForConnectingToRobot() {
         System.out.println("[Client] Connecting to the robot");
         connectToRobot();
         return new Message("[Server] [Robot connected]");
@@ -34,12 +35,16 @@ public class ClientController {
         return new Message("[Server] [Robot disconnected]");
     }
 
-//    Specific robot commands
+    //    Specific robot commands
     @MessageMapping("/commandRobot")
     @SendTo("topic/bot")
     public Message clientCommand(Message message) throws IOException {
         System.out.println("[Client] Forward");
         commandRobot(message.getMessage());
         return new Message("[Server] Forward");
+    }
+
+    public void sendRobotDataToClient(List<Long> data) {
+        simpMessagingTemplate.convertAndSend("/topic/bot", data);
     }
 }
