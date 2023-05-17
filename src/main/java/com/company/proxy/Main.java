@@ -3,18 +3,15 @@ package com.company.proxy;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.*;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
 
 import static java.lang.System.out;
 
 @SpringBootApplication
-public class ProxyApplication {
+public class Main {
     private static String ROBOT_IP = "192.168.1.106";
     private static int PORT = 15020;
 
@@ -34,7 +31,7 @@ public class ProxyApplication {
     static ReadingThread readingThread;
     static SendingThread sendingThread;
 
-    public static void connectToRobot() {
+    public static Boolean connectToRobot() throws IOException {
         out.println("Connecting");
         try {
             if (sendingThread != null) sendingThread.setShouldISend(false);
@@ -71,9 +68,14 @@ public class ProxyApplication {
             botConnected = true;
             sendingThread.setShouldISend(true);
             out.println("[Connected, Socket made, Streams and Threads initialized]");
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
             out.println("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n 3. The robot has not booted yet(in that case the green light blinking)");
+            socket.close();
+            if (sendingThread != null) sendingThread.interrupt();
+            if (readingThread != null) readingThread.interrupt();
+            return false;
         }
     }
 
@@ -85,8 +87,8 @@ public class ProxyApplication {
             if (outputStream != null) outputStream.close();
             if (socket.isConnected()) socket.close();
             botConnected = false;
-            readingThread.setShouldIRead(false);
-            sendingThread.setShouldISend(false);
+            if (readingThread != null) readingThread.setShouldIRead(false);
+            if (sendingThread != null) sendingThread.setShouldISend(false);
             out.println("Socket closed");
         } catch (IOException e) {
             e.printStackTrace();
@@ -103,7 +105,8 @@ public class ProxyApplication {
 
 
     public static void main(String[] args) {
-        ConfigurableApplicationContext context = SpringApplication.run(ProxyApplication.class, args);
+        SpringApplication.run(Main.class, args);
     }
+
 
 }

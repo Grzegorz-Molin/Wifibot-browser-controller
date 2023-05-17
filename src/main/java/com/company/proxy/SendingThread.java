@@ -1,16 +1,16 @@
 package com.company.proxy;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Arrays;
 
-import static com.company.proxy.ProxyApplication.connectToRobot;
+import static com.company.proxy.Main.connectToRobot;
 import static java.lang.System.out;
 
 public class SendingThread extends Thread {
     byte[] dataToSend;
-    private final int SPEED = 200;
+    private final int SPEED = 150;
     OutputStream outputStream;
     private Boolean shouldISend;
 
@@ -36,7 +36,7 @@ public class SendingThread extends Thread {
                 // Sending data
                 outputStream.write(dataToSend);
                 outputStream.flush();
-                out.println("[Server] Sending: " + command + ", " + Arrays.toString(dataToSend));
+//                out.println("[Server] Sending: " + command + ", " + Arrays.toString(dataToSend));
                 Thread.sleep(25);
             }
             // Check for the disconnection of the robot
@@ -44,7 +44,11 @@ public class SendingThread extends Thread {
                 if (e.getMessage().equals("[Server] Broken pipe")) {
                     // handle Broken pipe error
                     System.out.println("[Server] Broken pipe error occurred; Reconnecting");
-                    connectToRobot();
+                    try {
+                        connectToRobot();
+                    } catch (IOException ex) {
+                        ex.printStackTrace();
+                    }
                 } else {
                     // handle other SocketException errors
                     e.printStackTrace();

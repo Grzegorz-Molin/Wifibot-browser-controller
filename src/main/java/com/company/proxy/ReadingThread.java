@@ -15,6 +15,7 @@ public class ReadingThread extends Thread {
     InputStream inputStream;
     private Boolean shouldIRead;
     private ClientController clientController;
+    private static int FETCHSPEED = 800;
 
     @Autowired
     private ApplicationContext context;
@@ -30,7 +31,7 @@ public class ReadingThread extends Thread {
 
     @Override
     public void run() {
-        out.println("[Server] Receiving");
+        out.println("[Server] Receiving"+shouldIRead);
 
         while (shouldIRead) {
             try {
@@ -51,9 +52,9 @@ public class ReadingThread extends Thread {
                         dataInLongs.add(Long.parseLong(string, 16));
                     }
 
-                    System.out.print("[Server] Received longs: " + dataInLongs + "\r");
+                    System.out.println("[Server] Received longs: " + dataInLongs + "\r");
                     clientController.sendRobotDataToClient(dataInLongs);
-                    Thread.sleep(50);
+                    Thread.sleep(FETCHSPEED);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();

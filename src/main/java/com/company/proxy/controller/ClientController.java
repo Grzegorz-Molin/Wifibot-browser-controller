@@ -10,7 +10,7 @@ import org.springframework.stereotype.Controller;
 import java.io.IOException;
 import java.util.List;
 
-import static com.company.proxy.ProxyApplication.*;
+import static com.company.proxy.Main.*;
 
 @Controller
 public class ClientController {
@@ -22,9 +22,15 @@ public class ClientController {
     @MessageMapping("/connectToRobot") // = app/connectToRobot ---> Receiving
     @SendTo("/topic/bot") // = /topic/bot ---> Sending
     public Message clientRequestForConnectingToRobot() {
-        System.out.println("[Client] Connecting to the robot");
-        connectToRobot();
-        return new Message("[Server] [Robot connected]");
+        System.out.println("[Client] Connect to the robot");
+        try {
+            if (connectToRobot()) {
+                return new Message("[Server] [Robot connected]");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new Message("[Server] [Robot not connected]");
     }
 
     @MessageMapping("/disconnectFromRobot")
