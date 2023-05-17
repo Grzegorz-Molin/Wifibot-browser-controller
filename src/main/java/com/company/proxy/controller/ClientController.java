@@ -9,6 +9,8 @@ import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.company.proxy.Main.*;
 
@@ -48,6 +50,24 @@ public class ClientController {
         System.out.println("[Client] Forward");
         commandRobot(message.getMessage());
         return new Message("[Server] Forward");
+    }
+
+    @MessageMapping("/setProperty")
+    @SendTo("topic/bot")
+    public Message clientChangeProperty(Message message) {
+        String messageInString = message.getMessage();
+        String property = "";
+        int value = 0;
+
+        Pattern pattern = Pattern.compile("\\b(\\w+):(\\w+)\\b");
+        Matcher matcher = pattern.matcher(messageInString);
+
+        while (matcher.find()) {
+            property = matcher.group(1);
+            value = Integer.parseInt(matcher.group(2));
+        }
+
+        return new Message("[Server] Operation " + property + " successful: " + setProperty(property, value));
     }
 
     public void sendRobotDataToClient(List<Long> data) {

@@ -15,7 +15,17 @@ public class ReadingThread extends Thread {
     InputStream inputStream;
     private Boolean shouldIRead;
     private ClientController clientController;
-    private static int FETCHSPEED = 800;
+
+    public int getFETCHINGINTERVAL() {
+        return FETCHINGINTERVAL;
+    }
+
+    public Boolean setFETCHINGINTERVAL(int FETCHINGINTERVAL) {
+        this.FETCHINGINTERVAL = FETCHINGINTERVAL;
+        return true;
+    }
+
+    private int FETCHINGINTERVAL = 800;
 
     @Autowired
     private ApplicationContext context;
@@ -54,7 +64,7 @@ public class ReadingThread extends Thread {
 
                     System.out.println("[Server] Received longs: " + dataInLongs + "\r");
                     clientController.sendRobotDataToClient(dataInLongs);
-                    Thread.sleep(FETCHSPEED);
+                    Thread.sleep(FETCHINGINTERVAL);
                 }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();

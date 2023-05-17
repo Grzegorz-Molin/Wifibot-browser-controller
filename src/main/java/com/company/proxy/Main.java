@@ -103,6 +103,25 @@ public class Main {
         else if (message.equals("right")) sendingThread.direction("right");
     }
 
+    public static Boolean setProperty(String property, int value){
+        out.println("[Server]property:  "+property + ", value "+value);
+        Boolean result = false;
+        if (property.equals("speed")){
+            if (sendingThread != null){
+                result = sendingThread.setROBOTSPEED(value);
+            }
+        } else if (property.equals("sendingInterval")){
+            if (sendingThread != null){
+                result = sendingThread.setSENDINGINTERVAL(value);
+            }
+        } else if (property.equals("fetchingInterval")){
+            if (readingThread != null) {
+                result = readingThread.setFETCHINGINTERVAL(value);
+            }
+        }
+        return result;
+    }
+
 
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);

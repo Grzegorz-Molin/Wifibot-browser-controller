@@ -10,7 +10,9 @@ import static java.lang.System.out;
 
 public class SendingThread extends Thread {
     byte[] dataToSend;
-    private final int SPEED = 150;
+    private int ROBOTSPEED = 150;
+    private int SENDINGINTERVAL = 25;
+
     OutputStream outputStream;
     private Boolean shouldISend;
 
@@ -37,7 +39,7 @@ public class SendingThread extends Thread {
                 outputStream.write(dataToSend);
                 outputStream.flush();
 //                out.println("[Server] Sending: " + command + ", " + Arrays.toString(dataToSend));
-                Thread.sleep(25);
+                Thread.sleep(SENDINGINTERVAL);
             }
             // Check for the disconnection of the robot
             catch (SocketException e) {
@@ -64,14 +66,14 @@ public class SendingThread extends Thread {
 
     // Robot commands
     public void forward() {
-        System.out.println("Forward: " + SPEED);
+        System.out.println("Forward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;     //255 (= -1)
         newCommand[1] = (byte) 0x07;     //
-        newCommand[2] = (byte) SPEED;
-        newCommand[3] = (byte) (SPEED >> 8);
-        newCommand[4] = (byte) SPEED;
-        newCommand[5] = (byte) (SPEED >> 8);
+        newCommand[2] = (byte) ROBOTSPEED;
+        newCommand[3] = (byte) (ROBOTSPEED >> 8);
+        newCommand[4] = (byte) ROBOTSPEED;
+        newCommand[5] = (byte) (ROBOTSPEED >> 8);
         newCommand[6] = (byte) 0x53;     //forward
 
         CRC16 crc = new CRC16();
@@ -86,14 +88,14 @@ public class SendingThread extends Thread {
     }
 
     public void backward() {
-        System.out.println("Backward: " + SPEED);
+        System.out.println("Backward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;        //255
         newCommand[1] = (byte) 0x07;        //size
-        newCommand[2] = (byte) SPEED;    //left SPEED
-        newCommand[3] = (byte) (SPEED >> 8);
-        newCommand[4] = (byte) SPEED;    //right SPEED
-        newCommand[5] = (byte) (SPEED >> 8);
+        newCommand[2] = (byte) ROBOTSPEED;    //left ROBOTSPEED
+        newCommand[3] = (byte) (ROBOTSPEED >> 8);
+        newCommand[4] = (byte) ROBOTSPEED;    //right ROBOTSPEED
+        newCommand[5] = (byte) (ROBOTSPEED >> 8);
         newCommand[6] = (byte) 0x03;        //backward
 
         CRC16 crc = new CRC16();
@@ -108,14 +110,14 @@ public class SendingThread extends Thread {
     }
 
     public void direction(String dir) {
-        System.out.println("Rotate " + dir + ", SPEED: " + SPEED);
+        System.out.println("Rotate " + dir + ", ROBOTSPEED: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;
         newCommand[1] = (byte) 0x07;
-        newCommand[2] = (byte) SPEED;
-        newCommand[3] = (byte) (SPEED >> 8);
-        newCommand[4] = (byte) SPEED;
-        newCommand[5] = (byte) (SPEED >> 8);
+        newCommand[2] = (byte) ROBOTSPEED;
+        newCommand[3] = (byte) (ROBOTSPEED >> 8);
+        newCommand[4] = (byte) ROBOTSPEED;
+        newCommand[5] = (byte) (ROBOTSPEED >> 8);
         if (dir.equals("right")) {
             newCommand[6] = (byte) 0x43;
         } else {
@@ -176,6 +178,23 @@ public class SendingThread extends Thread {
 
 
     // Getters and Setter
+    public int getROBOTSPEED() {
+        return ROBOTSPEED;
+    }
+
+    public Boolean setROBOTSPEED(int ROBOTSPEED) {
+        this.ROBOTSPEED = ROBOTSPEED;
+        return true;
+    }
+
+    public int getSENDINGINTERVAL() {
+        return SENDINGINTERVAL;
+    }
+
+    public Boolean setSENDINGINTERVAL(int SENDINGINTERVAL) {
+        this.SENDINGINTERVAL = SENDINGINTERVAL;
+        return true;
+    }
     public byte[] getDataToSend() {
         return dataToSend;
     }
