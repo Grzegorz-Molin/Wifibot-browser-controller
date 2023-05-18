@@ -16,15 +16,6 @@ public class ReadingThread extends Thread {
     private Boolean shouldIRead;
     private ClientController clientController;
 
-    public int getFETCHINGINTERVAL() {
-        return FETCHINGINTERVAL;
-    }
-
-    public Boolean setFETCHINGINTERVAL(int FETCHINGINTERVAL) {
-        this.FETCHINGINTERVAL = FETCHINGINTERVAL;
-        return true;
-    }
-
     private int FETCHINGINTERVAL = 800;
 
     @Autowired
@@ -72,6 +63,14 @@ public class ReadingThread extends Thread {
         }
     }
 
+    public int getFETCHINGINTERVAL() {
+        return FETCHINGINTERVAL;
+    }
+
+    public Boolean setFETCHINGINTERVAL(int FETCHINGINTERVAL) {
+        this.FETCHINGINTERVAL = FETCHINGINTERVAL;
+        return true;
+    }
     public void setInputStream(InputStream inputStream) {
         this.inputStream = inputStream;
     }

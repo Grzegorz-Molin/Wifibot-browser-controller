@@ -36,7 +36,7 @@ public class ClientController {
     }
 
     @MessageMapping("/disconnectFromRobot")
-    @SendTo("topic/bot")
+    @SendTo("/topic/bot")
     public Message clientRequestFroDisconnectingFromRobot() throws IOException {
         System.out.println("[Client] Disconnect from robot");
         disconnectFromRobot();
@@ -45,7 +45,7 @@ public class ClientController {
 
     //    Specific robot commands
     @MessageMapping("/commandRobot")
-    @SendTo("topic/bot")
+    @SendTo("/topic/bot")
     public Message clientCommand(Message message) throws IOException {
         System.out.println("[Client] Forward");
         commandRobot(message.getMessage());
@@ -53,7 +53,7 @@ public class ClientController {
     }
 
     @MessageMapping("/setProperty")
-    @SendTo("topic/bot")
+    @SendTo("/topic/setPropertyResponse")
     public Message clientChangeProperty(Message message) {
         String messageInString = message.getMessage();
         String property = "";
@@ -67,8 +67,11 @@ public class ClientController {
             value = Integer.parseInt(matcher.group(2));
         }
 
-        return new Message("[Server] Operation " + property + " successful: " + setProperty(property, value));
+        boolean success = setProperty(property, value); // Call the setProperty method
+        System.out.println("Seting property '"+property+"' has been '"+success+"'");
+        return new Message(String.valueOf(success));
     }
+
 
     public void sendRobotDataToClient(List<Long> data) {
         simpMessagingTemplate.convertAndSend("/topic/bot", data);
