@@ -2,6 +2,7 @@ package com.company.proxy.controller;
 
 import com.company.proxy.model.Message;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -55,20 +56,33 @@ public class ClientController {
     @MessageMapping("/setProperty")
     @SendTo("/topic/setPropertyResponse")
     public Message clientChangeProperty(Message message) {
+        System.out.println("--- changin property ---");
         String messageInString = message.getMessage();
+        System.out.println("Message in strng: " + messageInString);
         String property = "";
-        int value = 0;
+        boolean success = false;
 
         Pattern pattern = Pattern.compile("\\b(\\w+):(\\w+)\\b");
         Matcher matcher = pattern.matcher(messageInString);
 
         while (matcher.find()) {
-            property = matcher.group(1);
-            value = Integer.parseInt(matcher.group(2));
+            if (!matcher.group(1).equals("robotIP")) {
+                property = matcher.group(1);
+                int value = Integer.parseInt(matcher.group(2));
+                success = setProperty(property, value); // Call the setProperty method
+            } else {
+                System.out.println("Looks like it is IP address...");
+                Pattern patternIP = Pattern.compile("\\b(\\w+):(([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3}))\\b");
+                Matcher matcherIP = patternIP.matcher(messageInString);
+                while (matcherIP.find()) {
+                    property = matcherIP.group(1);
+                    String valueInString = matcherIP.group(2);
+                    success = setProperty(property, valueInString);
+                }
+            }
         }
 
-        boolean success = setProperty(property, value); // Call the setProperty method
-        System.out.println("Seting property '"+property+"' has been '"+success+"'");
+        System.out.println("Seting property [int] '" + property + "' has been '" + success + "'\n");
         return new Message(String.valueOf(success));
     }
 

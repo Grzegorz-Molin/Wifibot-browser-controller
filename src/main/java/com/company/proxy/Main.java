@@ -12,6 +12,7 @@ import static java.lang.System.out;
 
 @SpringBootApplication
 public class Main {
+
     private static String ROBOT_IP = "192.168.1.106";
     private static int PORT = 15020;
 
@@ -71,7 +72,7 @@ public class Main {
             return true;
         } catch (IOException e) {
             e.printStackTrace();
-            out.println("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n 3. The robot has not booted yet(in that case the green light blinking)");
+            out.println("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n   3. The robot has not booted yet(in that case the green light blinking)");
             socket.close();
             if (sendingThread != null) sendingThread.interrupt();
             if (readingThread != null) readingThread.interrupt();
@@ -85,7 +86,7 @@ public class Main {
             actualCommand = "stop";
             if (inputStream != null) inputStream.close();
             if (outputStream != null) outputStream.close();
-            if (socket.isConnected()) socket.close();
+            if (socket != null) socket.close();
             botConnected = false;
             if (readingThread != null) readingThread.setShouldIRead(false);
             if (sendingThread != null) sendingThread.setShouldISend(false);
@@ -103,23 +104,45 @@ public class Main {
         else if (message.equals("right")) sendingThread.direction("right");
     }
 
-    public static Boolean setProperty(String property, int value){
-        out.println("[Server]property:  "+property + ", value "+value);
+    public static Boolean setProperty(String property, int value) {
+        out.println("[Server]property:  " + property + ", value " + value);
         Boolean result = false;
-        if (property.equals("speed")){
-            if (sendingThread != null){
+        if (property.equals("speed")) {
+            if (sendingThread != null) {
                 result = sendingThread.setROBOTSPEED(value);
             }
-        } else if (property.equals("sendingInterval")){
-            if (sendingThread != null){
+        } else if (property.equals("sendingInterval")) {
+            if (sendingThread != null) {
                 result = sendingThread.setSENDINGINTERVAL(value);
             }
-        } else if (property.equals("fetchingInterval")){
+        } else if (property.equals("fetchingInterval")) {
             if (readingThread != null) {
                 result = readingThread.setFETCHINGINTERVAL(value);
             }
+        } else if (property.equals("robotPort")) {
+            result = setPORT(value);
+        }
+
+        return result;
+    }
+
+    public static Boolean setProperty(String property, String value) {
+        out.println("[Server] property string:  " + property + ", value " + value);
+        Boolean result = false;
+        if (property.equals("robotIP")) {
+            result = setRobotIp(String.valueOf(value));
         }
         return result;
+    }
+
+    public static Boolean setRobotIp(String robotIp) {
+        ROBOT_IP = robotIp;
+        return true;
+    }
+
+    public static Boolean setPORT(int PORT) {
+        Main.PORT = PORT;
+        return true;
     }
 
 
