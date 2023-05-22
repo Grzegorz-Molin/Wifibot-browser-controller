@@ -32,25 +32,21 @@ public class Main {
     static ReadingThread readingThread;
     static SendingThread sendingThread;
 
-    public static Boolean connectToRobot() throws IOException {
-        out.println("Connecting");
+    public static Boolean communicateWithRobot() throws IOException {
         try {
-            if (sendingThread != null) sendingThread.setShouldISend(false);
+//Output stream for commands
             socket = new Socket();
             socket.connect(new InetSocketAddress(ROBOT_IP, PORT), 3000);
             socket.setKeepAlive(true);
-
-
-            // Initialize Input a and Output streams
-            inputStream = socket.getInputStream();
-            dataInputStream = new DataInputStream(inputStream);
             outputStream = socket.getOutputStream();
-            dataOutputStream = new DataOutputStream(outputStream);
-
-            // Initialize threads
             sendingThread = new SendingThread(outputStream, socket);
+            sendingThread.setShouldISend(true);
             sendingThread.start();
-            readingThread = new ReadingThread(inputStream);
+
+            // Input data thread
+
+            readingThread = new ReadingThread(ROBOT_IP, PORT);
+            readingThread.setShouldIRead(true);
             readingThread.start();
 
             /* ConnectToRobot() method could have been called by the sending threads after "Broken pipe" error has been
@@ -67,12 +63,14 @@ public class Main {
 //			}
 
             botConnected = true;
-            sendingThread.setShouldISend(true);
             out.println("[Connected, Socket made, Streams and Threads initialized]");
             return true;
         } catch (IOException e) {
             e.printStackTrace();
-            out.println("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n   3. The robot has not booted yet(in that case the green light blinking)");
+            out.println("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n  " +
+                    " 3. The robot has not booted yet(in that case the green light blinking) \n   The Access Point (router) is ON");
+            out.println("You can also try to do following:\n   1. Restart Wifibot \n   2. Restart Access Point (router)" +
+                    "\n   3. Restart your application");
             socket.close();
             if (sendingThread != null) sendingThread.interrupt();
             if (readingThread != null) readingThread.interrupt();
@@ -105,7 +103,7 @@ public class Main {
     }
 
     public static Boolean setProperty(String property, int value) {
-        out.println("[Server]property:  " + property + ", value " + value);
+//        out.println("[Server]property:  " + property + ", value " + value);
         Boolean result = false;
         if (property.equals("speed")) {
             if (sendingThread != null) {
@@ -127,7 +125,7 @@ public class Main {
     }
 
     public static Boolean setProperty(String property, String value) {
-        out.println("[Server] property string:  " + property + ", value " + value);
+//        out.println("[Server] property string:  " + property + ", value " + value);
         Boolean result = false;
         if (property.equals("robotIP")) {
             result = setRobotIp(String.valueOf(value));

@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
 
-import static com.company.proxy.Main.connectToRobot;
+import static com.company.proxy.Main.communicateWithRobot;
 import static java.lang.System.out;
 
 public class SendingThread extends Thread {
@@ -47,7 +47,7 @@ public class SendingThread extends Thread {
                     // handle Broken pipe error
                     System.out.println("[Server] Broken pipe error occurred; Reconnecting");
                     try {
-                        connectToRobot();
+                        communicateWithRobot();
                     } catch (IOException ex) {
                         ex.printStackTrace();
                     }
@@ -66,7 +66,7 @@ public class SendingThread extends Thread {
 
     // Robot commands
     public void forward() {
-        System.out.println("Forward: " + ROBOTSPEED);
+//        System.out.println("Forward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;     //255 (= -1)
         newCommand[1] = (byte) 0x07;     //
@@ -88,7 +88,7 @@ public class SendingThread extends Thread {
     }
 
     public void backward() {
-        System.out.println("Backward: " + ROBOTSPEED);
+//        System.out.println("Backward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;        //255
         newCommand[1] = (byte) 0x07;        //size
@@ -110,7 +110,7 @@ public class SendingThread extends Thread {
     }
 
     public void direction(String dir) {
-        System.out.println("Rotate " + dir + ", ROBOTSPEED: " + ROBOTSPEED);
+//        System.out.println("Rotate " + dir + ", ROBOTSPEED: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;
         newCommand[1] = (byte) 0x07;
@@ -225,7 +225,7 @@ public class SendingThread extends Thread {
 
     public void setCommand(String command) {
         this.command = command;
-        out.println("[Server] Command now is: " + this.command + "; shouldISend is: " + shouldISend);
+//        out.println("[Server] Command now is: " + this.command + "; shouldISend is: " + shouldISend);
     }
 
     public Socket getSocket() {
