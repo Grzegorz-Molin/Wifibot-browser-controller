@@ -2,69 +2,59 @@ package com.company.proxy;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketException;
 
-import static com.company.proxy.Main.connectToRobot;
 import static java.lang.System.out;
 
-public class SendingThread extends Thread {
-    byte[] dataToSend;
+public class SendingThread extends Thread{
+    private byte[] dataToSend;
+    private String command;
     private int ROBOTSPEED = 150;
     private int SENDINGINTERVAL = 25;
 
-    OutputStream outputStream;
-    private Boolean shouldISend;
 
-    private String command;
-    private Socket socket;
+    private boolean shouldISend;
 
-    //    Parameter constructor
-    public SendingThread(OutputStream outputStream, Socket socket) {
-        this.outputStream = outputStream;
-        this.shouldISend = true;
+    private Socket sendingSocket;
+    private OutputStream sendingOutputStream;
+
+
+    public SendingThread(String ROBOT_IP, int PORT) throws IOException {
+        sendingSocket = new Socket();
+        sendingSocket.connect(new InetSocketAddress(ROBOT_IP, PORT), 3000);
+        sendingSocket.setKeepAlive(true);
+        this.sendingOutputStream = sendingSocket.getOutputStream();
         this.command = "nothing";
         this.dataToSend = giveMeNothing();
-        this.socket = socket;
-        out.println("[Server] Sending thread made up");
-
+        out.println("Sending thread made up, socket: +"+sendingSocket.toString());
     }
 
-    // Main sending logic inside Run() method. It only sends if the command is not "nothing"
+    public void setDataToSend(byte[] dataToSend) {
+        this.dataToSend = dataToSend;
+    }
+
+
     @Override
     public void run() {
-        while (shouldISend) {
+        while(shouldISend){
             try {
-                // Sending data
-                outputStream.write(dataToSend);
-                outputStream.flush();
-//                out.println("[Server] Sending: " + command + ", " + Arrays.toString(dataToSend));
+                // Sending command
+                sendingOutputStream.write(dataToSend);
+                sendingOutputStream.flush();
+
                 Thread.sleep(SENDINGINTERVAL);
-            }
-            // Check for the disconnection of the robot
-            catch (SocketException e) {
-                if (e.getMessage().equals("[Server] Broken pipe")) {
-                    // handle Broken pipe error
-                    System.out.println("[Server] Broken pipe error occurred; Reconnecting");
-                    try {
-                        connectToRobot();
-                    } catch (IOException ex) {
-                        ex.printStackTrace();
-                    }
-                } else {
-                    // handle other SocketException errors
-                    e.printStackTrace();
-                }
-            } catch (Exception e) {
-                // handle other exceptions
+            } catch (IOException e){
                 e.printStackTrace();
-                setShouldISend(false);
-                out.println("[Server] Ending sending");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }
 
-    // Robot commands
+
+
+    //    ROBOT COMMANDS
     public void forward() {
         System.out.println("Forward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
@@ -85,6 +75,10 @@ public class SendingThread extends Thread {
         newCommand[8] = (byte) (crc.getValue() >> 8);
         setDataToSend(newCommand);
         setCommand("forward");
+    }
+
+    public void setCommand(String command) {
+        this.command = command;
     }
 
     public void backward() {
@@ -176,10 +170,10 @@ public class SendingThread extends Thread {
         return newCommand;
     }
 
+    // SETTERS
 
-    // Getters and Setter
-    public int getROBOTSPEED() {
-        return ROBOTSPEED;
+    public void setShouldISend(boolean shouldISend) {
+        this.shouldISend = shouldISend;
     }
 
     public Boolean setROBOTSPEED(int ROBOTSPEED) {
@@ -194,45 +188,5 @@ public class SendingThread extends Thread {
     public Boolean setSENDINGINTERVAL(int SENDINGINTERVAL) {
         this.SENDINGINTERVAL = SENDINGINTERVAL;
         return true;
-    }
-    public byte[] getDataToSend() {
-        return dataToSend;
-    }
-
-    public void setDataToSend(byte[] dataToSend) {
-        this.dataToSend = dataToSend;
-    }
-
-    public OutputStream getOutputStream() {
-        return outputStream;
-    }
-
-    public void setOutputStream(OutputStream outputStream) {
-        this.outputStream = outputStream;
-    }
-
-    public Boolean getShouldISend() {
-        return shouldISend;
-    }
-
-    public void setShouldISend(Boolean shouldISend) {
-        this.shouldISend = shouldISend;
-    }
-
-    public String getCommand() {
-        return command;
-    }
-
-    public void setCommand(String command) {
-        this.command = command;
-        out.println("[Server] Command now is: " + this.command + "; shouldISend is: " + shouldISend);
-    }
-
-    public Socket getSocket() {
-        return socket;
-    }
-
-    public void setSocket(Socket socket) {
-        this.socket = socket;
     }
 }
