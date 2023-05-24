@@ -20,42 +20,52 @@ import static java.lang.System.out;
 public class ReadingThread extends Thread {
     private Boolean shouldIRead;
     private ClientController clientController;
+    private Main main;
     private RobotData rdata;
     private String robotIP;
     private int robotPort;
-    private Socket fetchingSocket;
-    static InputStream fetchingInputStream;
+    private Socket socket;
+    private InputStream fetchingInputStream;
 
     private int FETCHINGINTERVAL = 800;
 
     @Autowired
     private ApplicationContext context;
 
-    public ReadingThread(String robotIP, int robotPort) {
+    public ReadingThread(Socket socket, String robotIP, int robotPort) {
 
         //  Adding a reference to (already existing) Client controller to be able to pass the robot data to client
         this.clientController = CustomContextAware.getContext().getBean(ClientController.class);
-
+        this.main = CustomContextAware.getContext().getBean(Main.class);
+        this.socket = socket;
         this.robotIP = robotIP;
         this.robotPort = robotPort;
         rdata = new RobotData();
-        out.println("[Server] Reading thread made up, robot iP: " + this.robotIP + ", fetching interval: " + this.getFETCHINGINTERVAL() + "ms");
+        out.println("[Server] Reading thread made up, robot iP: " + this.robotIP + ", fetching interval: " +
+                this.getFETCHINGINTERVAL() + "ms, socket existin: " + socket.toString());
+    }
+
+    public void setsocket(Socket socket) {
+        this.socket = socket;
     }
 
     @Override
     public void run() {
-        while (shouldIRead) {
+        while (shouldIRead &&!Thread.currentThread().isInterrupted()) {
+            out.println("I'm trying...");
             try {
-                fetchingSocket = new Socket();
-                fetchingSocket.connect(new InetSocketAddress(robotIP, robotPort), 3000);
-                fetchingInputStream = fetchingSocket.getInputStream();
+                if (socket != null && socket.isConnected()) {
+                    out.println("Creating a new input stream...");
+                    fetchingInputStream = socket.getInputStream();
+                } else {
+                    out.println("Socket not existing or not connected!");
+                    main.checkForDisconnectedSocket();
+                    setShouldIRead(false);
+                }
 
                 // Receiving data
                 byte[] buffer = new byte[21];
-                out.println("Bytes:"+Arrays.toString(buffer));
-
                 int bytesRead = fetchingInputStream.read(buffer, 0, buffer.length);
-                out.println("Bytes2:"+ Arrays.toString(buffer));
                 if (bytesRead == -1) {
                     // Connection closed
                     break;
@@ -67,17 +77,30 @@ public class ReadingThread extends Thread {
                 Thread.sleep(FETCHINGINTERVAL);
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
+                setShouldIRead(false);
+                this.interrupt();
             } finally {
-                if (fetchingSocket != null) {
+                if (fetchingInputStream != null) {
                     try {
-                        fetchingSocket.close();
+                        fetchingInputStream.close();
+                        main.checkForDisconnectedSocket();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             }
+            if (Thread.currentThread().isInterrupted()) {
+                break;
+            }
         }
     }
+
+    public void stopThread() {
+        shouldIRead = false;
+        interrupt();
+    }
+
+    // SETTERS
 
     public int getFETCHINGINTERVAL() {
         return FETCHINGINTERVAL;

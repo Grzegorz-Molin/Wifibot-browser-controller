@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 
 import static com.company.proxy.Main.communicateWithRobot;
 import static java.lang.System.out;
@@ -20,7 +21,7 @@ public class SendingThread extends Thread {
     private Socket socket;
 
     //    Parameter constructor
-    public SendingThread(OutputStream outputStream, Socket socket) {
+    public SendingThread(OutputStream outputStream) {
         this.outputStream = outputStream;
         this.shouldISend = true;
         this.command = "nothing";
@@ -33,7 +34,7 @@ public class SendingThread extends Thread {
     // Main sending logic inside Run() method. It only sends if the command is not "nothing"
     @Override
     public void run() {
-        while (shouldISend) {
+        while (!Thread.currentThread().isInterrupted()) {
             try {
                 // Sending data
                 outputStream.write(dataToSend);
@@ -50,18 +51,28 @@ public class SendingThread extends Thread {
                         communicateWithRobot();
                     } catch (IOException ex) {
                         ex.printStackTrace();
+                        this.interrupt();
                     }
                 } else {
                     // handle other SocketException errors
                     e.printStackTrace();
+                    this.interrupt();
                 }
             } catch (Exception e) {
                 // handle other exceptions
                 e.printStackTrace();
-                setShouldISend(false);
                 out.println("[Server] Ending sending");
+                this.interrupt();
+            }
+            if (Thread.currentThread().isInterrupted()) {
+                break;
             }
         }
+    }
+
+    public void stopThread() {
+        shouldISend = false;
+        interrupt();
     }
 
     // Robot commands

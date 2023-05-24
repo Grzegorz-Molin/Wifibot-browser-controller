@@ -5,8 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 
 import static java.lang.System.out;
 
@@ -38,14 +40,15 @@ public class Main {
             socket = new Socket();
             socket.connect(new InetSocketAddress(ROBOT_IP, PORT), 3000);
             socket.setKeepAlive(true);
+
             outputStream = socket.getOutputStream();
-            sendingThread = new SendingThread(outputStream, socket);
+            sendingThread = new SendingThread(outputStream);
             sendingThread.setShouldISend(true);
             sendingThread.start();
 
             // Input data thread
 
-            readingThread = new ReadingThread(ROBOT_IP, PORT);
+            readingThread = new ReadingThread(socket, ROBOT_IP, PORT);
             readingThread.setShouldIRead(true);
             readingThread.start();
 
@@ -71,23 +74,62 @@ public class Main {
                     " 3. The robot has not booted yet(in that case the green light blinking) \n   The Access Point (router) is ON");
             out.println("You can also try to do following:\n   1. Restart Wifibot \n   2. Restart Access Point (router)" +
                     "\n   3. Restart your application");
-            socket.close();
+//            socket.close();
             if (sendingThread != null) sendingThread.interrupt();
             if (readingThread != null) readingThread.interrupt();
             return false;
         }
     }
 
+    public void checkForDisconnectedSocket() throws IOException {
+        if (socket != null) {
+            if (socket.isClosed() ){
+                out.println("Disconnected.... creating new instances");
+
+                // Stop the old threads
+                if (readingThread != null) {
+                    readingThread.stopThread();
+                    readingThread = null;
+                }
+
+                if (sendingThread != null) {
+                    sendingThread.stopThread();
+                    sendingThread = null;
+                }
+
+                // Create new instances of the threads
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(ROBOT_IP, PORT), 3000);
+                socket.setKeepAlive(true);
+                sendingThread = new SendingThread(outputStream);
+                readingThread = new ReadingThread(socket, ROBOT_IP, PORT);
+
+                // Start the threads
+                sendingThread.start();
+                readingThread.start();
+            }
+        }
+    }
+
+
+
 
     public static void disconnectFromRobot() throws IOException {
+        out.println("Disconnectingg --->");
         try {
             actualCommand = "stop";
             if (inputStream != null) inputStream.close();
             if (outputStream != null) outputStream.close();
             if (socket != null) socket.close();
             botConnected = false;
-            if (readingThread != null) readingThread.setShouldIRead(false);
-            if (sendingThread != null) sendingThread.setShouldISend(false);
+            if (readingThread != null) {
+                readingThread.setShouldIRead(false);
+                readingThread.interrupt();
+            }
+            if (sendingThread != null) {
+                sendingThread.setShouldISend(false);
+                sendingThread.interrupt();
+            }
             out.println("Socket closed");
         } catch (IOException e) {
             e.printStackTrace();
