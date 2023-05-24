@@ -22,20 +22,23 @@ public class ClientController {
     private SimpMessagingTemplate simpMessagingTemplate;
 
 
-    @MessageMapping("/communicateWithRobot") // = app/connectToRobot ---> Receiving
+    @MessageMapping("/connectToRobot") // = app/connectToRobot ---> Receiving
     @SendTo("/topic/bot") // = /topic/bot ---> Sending
     public Message clientRequestForConnectingToRobot() throws IOException {
         System.out.println("[Client] Connect to the robot");
-        communicateWithRobot();
+        boolean result = connectToRobot();
+        String returnMessage = "[Server] [Robot ";
+        if (result) returnMessage += "connected]";
+        else returnMessage += "not connected]";
 
-        return new Message("[Server] [Robot connected]");
+        return new Message(returnMessage);
     }
 
     @MessageMapping("/disconnectFromRobot")
     @SendTo("/topic/bot")
     public Message clientRequestFroDisconnectingFromRobot() throws IOException {
         System.out.println("[Client] Disconnect from robot");
-        communicatingThread.disconnectFromRobot();
+        disconnectFromRobot();
         return new Message("[Server] [Robot disconnected]");
     }
 
@@ -43,15 +46,14 @@ public class ClientController {
     @MessageMapping("/commandRobot")
     @SendTo("/topic/bot")
     public Message clientCommand(Message message) throws IOException {
-        System.out.println("[Client] Forward");
-        communicatingThread.commandRobot(message.getMessage());
-        return new Message("[Server] Forward");
+        commandRobot(message.getMessage());
+        return new Message("[Server] ");
     }
 
     @MessageMapping("/setProperty")
     @SendTo("/topic/setPropertyResponse")
     public Message clientChangeProperty(Message message) {
-//        System.out.println("--- changin property ---");
+        System.out.println("--- changin property ---");
         String messageInString = message.getMessage();
 //        System.out.println("Message in strng: " + messageInString);
         String property = "";
@@ -64,14 +66,14 @@ public class ClientController {
             if (!matcher.group(1).equals("robotIP")) {
                 property = matcher.group(1);
                 int value = Integer.parseInt(matcher.group(2));
-                success = communicatingThread.setProperty(property, value); // Call the setProperty method
+                success = setProperty(property, value); // Call the setProperty method
             } else {
                 Pattern patternIP = Pattern.compile("\\b(\\w+):(([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3}))\\b");
                 Matcher matcherIP = patternIP.matcher(messageInString);
                 while (matcherIP.find()) {
                     property = matcherIP.group(1);
                     String valueInString = matcherIP.group(2);
-                    success = communicatingThread.setProperty(property, valueInString);
+                    success = setProperty(property, valueInString);
                 }
             }
         }

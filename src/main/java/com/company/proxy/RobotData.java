@@ -20,7 +20,7 @@ public class RobotData {
 
     //--------------------------------------------------------------------
     public RobotData() {
-        System.out.println("[Server] Robot data created");
+        System.out.println("[Server] Empty robot data created");
     }
 
     public void setAllData(byte[] buffer) {
@@ -44,8 +44,7 @@ public class RobotData {
         odometryRight = (((long) buffer[16] << 24) | ((long) buffer[15] << 16) | ((long) buffer[14] << 8) | (long) buffer[13]) & 0xFF;
         current = buffer[17]; // I [amperes]: (current*0.194) -37.5
         version = buffer[18];
-        System.out.println("[Server] Data set:"+ this);
-        System.out.flush();
+//        System.out.println("[Server] Data set:"+ this);
     }
 
     public Map<String, Object> getAllData() {
