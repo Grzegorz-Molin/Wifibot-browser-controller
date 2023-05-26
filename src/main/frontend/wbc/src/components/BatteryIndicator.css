@@ -1,0 +1,60 @@
+.content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: row;
+    gap: 0.8em;
+    padding-left: 0.7em;
+    padding-right: 0.7em;
+}
+
+.batteryShape {
+    position: relative;
+    width: 2.6rem;
+    height: 1.3rem;
+    border: 0.1rem solid var(--white2);
+    border-radius: 0.35rem;
+}
+
+.batteryShape::before {
+    content: " ";
+    position: absolute;
+    top: 50%;
+    right: -0.35rem;
+    transform: translateY(-50%);
+    width: 0.2rem;
+    height: 0.6rem;
+    background: var(--white2);
+    border-top-right-radius: 0.2rem;
+    border-bottom-right-radius: 0.2rem;
+}
+
+.batteryShape::after {
+    content: " ";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.level {
+    position: absolute;
+    top: 0.2rem;
+    left: 0.2rem;
+    right: 0.2rem;
+    bottom: 0.2rem;
+    border-radius: 0.2rem;
+    overflow: hidden;
+}
+
+.percentage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 50%;
+    border-radius: 0.2rem;
+    background: linear-gradient(90deg, var(--green1) 0%, var(--green2) 80%);
+}

@@ -1,0 +1,41 @@
+.odometer {
+    border-radius: 0.5em;
+    border: 2px solid var(--blue1);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    align-items: center;
+    align-content: center;
+    justify-items: center;
+    width: 15em;
+    font-size: 1.8em;
+}
+
+.odometer .label {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: baseline;
+
+}
+
+.odometer .label p {
+
+
+}
+
+.odometer .label .tcs {
+    font-size: 0.7em;
+
+}
+.odometer .label .odometryLeft {
+    grid-column: 1;
+}
+
+.odometer .label .odometryRight {
+    grid-column: 2;
+}
+
+.odometer .text-transition {
+    margin: 0;
+    padding: 0;
+}

@@ -1,5 +1,6 @@
 package com.company.proxy;
 
+import com.company.proxy.controller.ClientController;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -12,45 +13,53 @@ import static java.lang.System.out;
 @SpringBootApplication
 public class Main {
 
-    private static String ROBOT_IP = "192.168.1.106";
-    private static int FETCHING_PORT = 15010;
+    private String robotIP = "192.168.1.106";
+
+    private int fetchingPort = 15010;
+    private int fetchingInterval = 250;
+
+    private int sendingPort = 15000;
+    private int sendingInterval = 50;
 
     public static ConfigurableApplicationContext context;
-
-    // Status variables
-    static Boolean botConnected = false;
-    static String actualCommand = "nothing";
 
     static DatagramSocket socket;
     static DatagramSocket sendingSocket;
     static InetAddress address;
-    static InetAddress sendingAddress;
 
     // Threads
     static FetchingThread fetchingThread;
     static SendingThread sendingThread;
 
-    public static Boolean connectToRobot() throws IOException {
-        print("Connecting...");
+    public Boolean connectToRobot() {
         boolean result = false;
         try {
             // --- SENDING THREAD ---
+            if (!sendingThread.isAlive()) {
+                sendingThread = null;
+                sendingThread = new SendingThread();
+            }
             sendingSocket = new DatagramSocket();
-            sendingAddress = InetAddress.getByName(ROBOT_IP); // Replace with the desired IP address
-            sendingThread = new SendingThread(sendingSocket, sendingAddress);
+            address = InetAddress.getByName(robotIP);
+
+            sendingThread.setUpThread(sendingSocket, address, sendingPort, sendingInterval);
             sendingThread.setShouldISend(true);
             sendingThread.start();
 
             // --- FETCHING THREAD ---
-            // Create a DatagramSocket for sending and receiving data
+            if (!fetchingThread.isAlive()) {
+                fetchingThread = null;
+                fetchingThread = new FetchingThread();
+            }
             socket = new DatagramSocket();
+            socket.setSoTimeout(3000);
+
             // Prepare the data to send
             String initMessage = "init";
             byte[] initData = initMessage.getBytes();
-            address = InetAddress.getByName(ROBOT_IP); // Replace with the desired IP address
 
             // Send the "init" message
-            DatagramPacket initPacket = new DatagramPacket(initData, initData.length, address, FETCHING_PORT);
+            DatagramPacket initPacket = new DatagramPacket(initData, initData.length, address, fetchingPort);
             socket.send(initPacket);
 
             // Wait for the "ok" response
@@ -61,32 +70,20 @@ public class Main {
             // Check if the received message is "ok"
             if (new String(okBuffer).equals("ok")) {
                 // Initialization successful
-                botConnected = true;
                 print("Initialization of UDP socket successful, 'OK' received, communication begins...");
 
                 // Initialize thread
-                fetchingThread = new FetchingThread(socket, address);
+                fetchingThread.setUPThread(socket, address, fetchingPort, fetchingInterval);
                 fetchingThread.setShouldICommunicate(true);
                 fetchingThread.start();
-                botConnected = true;
                 print("Connected! Socket made, Streams and Threads initialized");
                 result = true;
             }
 
-            /* ConnectToRobot() method could have been called by the sending threads after "Broken pipe" error has been
-            invoked. Now we have to check, if this is tha case, and if so, recall last called command.
-            This behaviour is safe because in the beginning, actualCommand is initialized with "nothing". So if it not
-            "nothing", it had to be changed by some other command.
-            */
-//			if (!actualCommand.equals("nothing")) {
-//				out.println("Socket has fallen, reconfiguring sending command");
-//				if (actualCommand.equals("forward")) sendingThread.forward();
-//				else if (actualCommand.equals("backward")) sendingThread.backward();
-//				else if (actualCommand.equals("left")) sendingThread.direction("left");
-//				else if (actualCommand.equals("right")) sendingThread.direction("right");
-//			}
-
-
+        } catch (SocketTimeoutException e) {
+            // Timeout occurred while waiting for the "ok" response
+            print("Timeout occurred while waiting for 'OK' response.");
+            result = false;
         } catch (IOException e) {
             e.printStackTrace();
             print("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n   3. The robot has not booted yet(in that case the green light blinking)");
@@ -101,12 +98,9 @@ public class Main {
     }
 
 
-    public static void disconnectFromRobot() throws IOException {
-        actualCommand = "stop";
-        botConnected = false;
+    public void disconnectFromRobot() throws IOException {
         if (sendingThread != null) {
-            sendingThread.setShouldISend(false);
-            sendingThread.interrupt();
+            sendingThread.terminateConnection();
         }
 
         if (fetchingThread != null) {
@@ -117,7 +111,7 @@ public class Main {
         print("Socket closed");
     }
 
-    public static void commandRobot(String message) {
+    public void commandRobot(String message) {
         if (message.equals("nothing")) sendingThread.nothing();
         else if (message.equals("forward")) sendingThread.forward();
         else if (message.equals("backward")) sendingThread.backward();
@@ -125,53 +119,73 @@ public class Main {
         else if (message.equals("right")) sendingThread.direction("right");
     }
 
-    public static Boolean setProperty(String property, int value) {
+    public Boolean setProperty(String property, String value) {
         print("property:  " + property + ", value " + value);
         Boolean result = false;
-        if (property.equals("speed")) {
+        if (property.equals("robotIP")) {
+            result = setRobotIP(value);
+        } else if (property.equals("robotSendingPort")) {
+            result = setSendingPort(Integer.parseInt(value));
+        } else if (property.equals("robotFetchingPort")) {
+            result = setFetchingPort(Integer.parseInt(value));
+        // Intervals
+        } else if (property.equals("sendingInterval")) {
+            result = setSendingInterval(Integer.parseInt(value));
             if (sendingThread != null) {
-                result = sendingThread.setRobotSpeed(value);
+                result = sendingThread.setSendingInterval(Integer.parseInt(value));
             }
         } else if (property.equals("fetchingInterval")) {
+            result = setFetchingInterval(Integer.parseInt(value));
             if (fetchingThread != null) {
-                result = fetchingThread.setFETCHINGINTERVAL(value);
+                result = setFetchingInterval(Integer.parseInt(value));
             }
-        } else if (property.equals("robotPort")) {
-            result = setPORT(value);
+        } else if (property.equals("speed")) {
+            if (sendingThread != null) {
+                result = sendingThread.setRobotSpeed(Integer.parseInt(value));
+            }
         }
-
         return result;
     }
-
 
     public static void print(String message) {
         out.println("[Server] " + message);
     }
 
-    public static Boolean setProperty(String property, String value) {
-        print("property string:  " + property + ", value " + value);
-        Boolean result = false;
-        if (property.equals("robotIP")) {
-            result = setRobotIp(String.valueOf(value));
-        }
-        return result;
+    public static void printAdvice(){
+        print("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n   3. The robot has not booted yet(in that case the green light blinking)");
     }
 
     // SETTERS
-    public static Boolean setRobotIp(String robotIp) {
-        ROBOT_IP = robotIp;
+    public Boolean setRobotIP(String robotIp) {
+        this.robotIP = robotIp;
         return true;
     }
 
-    public static Boolean setPORT(int FETCHING_PORT) {
-        Main.FETCHING_PORT = FETCHING_PORT;
+    public Boolean setFetchingPort(int fetchingPort) {
+        this.fetchingPort = fetchingPort;
         return true;
     }
 
+    public boolean setFetchingInterval(int fetchingInterval) {
+        this.fetchingInterval = fetchingInterval;
+        return true;
+    }
+
+    public boolean setSendingPort(int sendingPort) {
+        this.sendingPort = sendingPort;
+        return true;
+    }
+
+    public boolean setSendingInterval(int sendingInterval) {
+        this.sendingInterval = sendingInterval;
+        return true;
+    }
 
     // MAIN
     public static void main(String[] args) {
         SpringApplication.run(Main.class, args);
+        sendingThread = new SendingThread();
+        fetchingThread = new FetchingThread();
     }
 
 

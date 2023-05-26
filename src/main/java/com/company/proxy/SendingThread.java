@@ -2,6 +2,8 @@ package com.company.proxy;
 
 import ch.qos.logback.core.joran.spi.SaxEventInterpretationContext;
 import com.company.proxy.controller.ClientController;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -10,12 +12,11 @@ import java.net.InetAddress;
 import java.util.Arrays;
 
 import static com.company.proxy.Main.print;
+import static com.company.proxy.Main.printAdvice;
 
 public class SendingThread extends Thread{
-    private String ROBOT_IP = "192.168.1.106";
-    private int PORT = 15000;
-
-    private int SENDINGINTERVAL = 50;
+    private int sendingPort;
+    private int sendingInterval;
     private boolean shouldISend;
     private DatagramSocket socket;
     private InetAddress address;
@@ -23,22 +24,18 @@ public class SendingThread extends Thread{
     // Sending
     private byte[] dataToSend;
     private String command;
-    private int ROBOTSPEED = 150;
+    private int ROBOTSPEED = 130;
 
-    private ClientController clientController;
-
-    public SendingThread(DatagramSocket socket, InetAddress address) throws IOException {
-        print("Creating new Fetching thread...");
-
-        //  Adding a reference to (already existing) Client controller to be able to pass the robot data to client
-        this.clientController = CustomContextAware.getContext().getBean(ClientController.class);
-
+    public void setUpThread(DatagramSocket socket, InetAddress address, int sendingPort, int sendingInterval) {
+        print("Setting up Fetching thread...");
         this.socket = socket;
         this.address = address;
+        this.sendingPort = sendingPort;
+        this.sendingInterval = sendingInterval;
         this.command = "nothing";
 
         this.dataToSend = giveMeNothing();
-        print("Sending thread made up!");
+        print("Sending thread set up!");
     }
 
     @Override
@@ -46,15 +43,14 @@ public class SendingThread extends Thread{
         while (shouldISend){
             try {
                 // Send the command
-                print("Sending: "+command+" "+ Arrays.toString(dataToSend));
-                DatagramPacket commandPacket = new DatagramPacket(dataToSend, dataToSend.length, address, PORT);
+                DatagramPacket commandPacket = new DatagramPacket(dataToSend, dataToSend.length, address, sendingPort);
                 socket.send(commandPacket);
 
                 // Sleep the interval time
-                Thread.sleep(SENDINGINTERVAL);
+                Thread.sleep(sendingInterval);
             } catch (IOException e) {
                 e.printStackTrace();
-                print("\nCheck if:  \n   1. You are connected to the right network \n   2. The robot is ON\n   3. The robot has not booted yet(in that case the green light blinking)");
+                printAdvice();
                 terminateConnection();
                 break;
             } catch (InterruptedException e) {
@@ -64,6 +60,17 @@ public class SendingThread extends Thread{
                 break;
             }
         }
+    }
+
+    public void terminateConnection() {
+        if (socket != null) {
+            setShouldISend(false);
+            socket.disconnect();
+        }
+        // Re-initialize the thread
+        shouldISend = false;
+        socket = null;
+        address = null;
     }
 
     //    ROBOT COMMANDS
@@ -192,43 +199,18 @@ public class SendingThread extends Thread{
         else if (message.equals("right")) direction("right");
     }
 
-    public void terminateConnection(){
-        if (socket != null) {
-            setShouldISend(false);
-            socket.disconnect();
-        }
-    }
 
-
-    public Boolean setProperty(String property, String value) {
-        print("[Server] property string:  " + property + ", value " + value);
-        Boolean result = false;
-        if (property.equals("robotIP")) {
-            result = setRobotIp(String.valueOf(value));
-        }
-        return result;
-    }
 
     public void setShouldISend(boolean shouldISend) {
         this.shouldISend = shouldISend;
-    }
-
-    public boolean setRobotIp(String ROBOT_IP) {
-        this.ROBOT_IP = ROBOT_IP;
-        return true;
-    }
-
-    public boolean setPort(int PORT) {
-        this.PORT = PORT;
-        return true;
     }
 
     public void setDataToSend(byte[] dataToSend) {
         this.dataToSend = dataToSend;
     }
 
-    public boolean setSendingInterval(int SENDINGINTERVAL) {
-        this.SENDINGINTERVAL = SENDINGINTERVAL;
+    public boolean setSendingInterval(int sendingInterval) {
+        this.sendingInterval = sendingInterval;
         return true;
     }
 

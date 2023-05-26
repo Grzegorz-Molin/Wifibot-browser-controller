@@ -1,0 +1,105 @@
+:root {
+    --white1: rgba(255, 255, 255, 1);
+    --white2: rgba(255, 255, 255, 0.85);
+    --white3: rgba(255, 255, 255, 0.7);
+    --white4: rgba(255, 255, 255, 0.2);
+    --orange1: rgba(236, 139, 48, 1);
+    --orange2: rgb(236, 176, 48);
+    --red2: rgb(250, 85, 82);
+    --red1: rgb(250, 85, 120);
+    --green1: rgb(29, 121, 107);
+    --green2: rgb(14, 131, 81);
+    --green1: rgb(81, 157, 115);
+    --green2: rgb(24, 139, 76);
+    --green3: rgb(40, 199, 164);
+    --green4: rgb(33, 161, 168);
+    --green5: rgba(23, 115, 120, 0.3);
+    --blue1: rgb(64, 100, 192);
+    --blue2: rgb(52, 96, 206);
+    --blue-light: rgb(137, 169, 250);
+    --dark-bg1: rgba(18, 18, 18, 1);
+    --dark-bg2: rgba(15, 21, 28, 1);
+    --dark-bg3: rgb(55, 62, 69);
+    --dark-bg4: rgba(35, 38, 43, 0.7);
+    --dark-bg5: rgb(80, 87, 98);
+    --dark-bg6: rgba(255, 255, 255, 0.1);
+    --yellow: rgb(243, 224, 103);
+    --yellow-warmer: #fdca40;
+}
+
+html,
+body {
+    margin: 0;
+    font-family: "Outfit";
+    font-weight: 600;
+    color: white;
+    background: var(--dark-bg2);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+
+h1 {
+    color: var(--white2);
+}
+
+h3 {
+    font-size: 2.2rem;
+}
+
+h2 {
+    color: var(--white4);
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+p {
+    overflow-wrap: break-word;
+}
+
+/* App.js */
+.bodyWrapper {
+    z-index: 1;
+
+    display: grid;
+    gap: 1.5em;
+    height: 90vh;
+    width: 97vw;
+    grid-template-columns: 6fr 1fr 20fr 1fr;
+    grid-template-rows: 16em 35em 20em;
+    grid-template-areas:
+        "controls info info info"
+        "controls ir1 video ir2"
+        "controls others others others";
+    padding-block: 2em;
+    margin-inline: auto;
+}
+
+/* --- COMPONENTS --- */
+.component {
+    z-index: 5;
+    border-radius: 1em 3em 2em;
+    border: 2px solid var(--dark-bg6);
+    background: var(--dark-bg6);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.25);
+}
+
+/* --- RESPONSIVENESS --- */
+@media screen and (max-width: 1080px) {
+    .bodyWrapper {
+        width: min(95%, 100em);
+        grid-template-areas:
+            "controls info info info"
+            "controls ir1 video ir2";
+    }
+}
+
+@media screen and (max-width: 720px) {
+    .bodyWrapper {
+        width: min(95%, 70em);
+        grid-template-columns: 1fr 20fr 1fr;
+        grid-template-areas:
+            "controls info info"
+            "ir1 video ir2";
+    }
+}

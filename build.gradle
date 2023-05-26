@@ -2,7 +2,16 @@ plugins {
 	id 'java'
 	id 'org.springframework.boot' version '3.0.6'
 	id 'io.spring.dependency-management' version '1.1.0'
+	id "com.github.node-gradle.node" version "3.5.0"
 }
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-websocket'
+	compileOnly 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
 
 group = 'com.company'
 version = '0.0.1-SNAPSHOT'
@@ -18,13 +27,36 @@ repositories {
 	mavenCentral()
 }
 
-dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-websocket'
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+node {
+	download = false
+
+	// indentify working directory in project
+	workDir = file("${project.projectDir}/src/main/frontend/wbc/nodejs")
+
+	// NPM work directory
+	npmWorkDir = file("${project.projectDir}/src/main/frontend/wbc/npm")
+
+	// node modules directory
+	nodeModulesDir = file("${project.projectDir}/src/main/frontend/wbc")
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
+task appNpmInstall(type: NpmTask){
+	description = " read package.json and install all jars"
+	workingDir = file("${project.projectDir}/src/main/frontend/wbc")
+	args =["install", "--debug"]
 }
+
+task appNpmBuild(type: NpmTask){
+	description = "build app for frontend"
+	workingDir = file("${project.projectDir}/src/main/frontend/wbc")
+	args =["run", "build"]
+}
+
+task copyToFrontend(type: Copy){
+	from "$projectDir/src/main/frontend/wbc/build"
+	into "$buildDir/resources/main/static"
+}
+
+appNpmBuild.dependsOn(appNpmInstall)
+copyToFrontend.dependsOn(appNpmBuild)
+compileJava.dependsOn(copyToFrontend)

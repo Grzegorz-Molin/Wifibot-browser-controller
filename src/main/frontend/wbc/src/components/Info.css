@@ -1,0 +1,113 @@
+.info {
+    grid-area: info;
+
+    border-radius: 20px;
+    display: grid;
+    gap: 0.5em;
+    grid-template-rows: 3em auto;
+    grid-template-areas:
+        "topBar topBar topBar"
+        "speedLeft odometry speedRight";
+    padding: 0;
+    padding-block-end: 0.5em;
+    z-index: 2;
+    border: none;
+    transition: all 0.3s;
+}
+
+.info__item {
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.info__item__bg {
+    background-color: var(--dark-bg3);
+}
+
+/* Speed */
+.info__item__speed__left {
+    grid-area: speedLeft;
+}
+
+.info__item__speed__right {
+    grid-area: speedRight;
+}
+
+.info__item__odometer {
+    align-self: center;
+    justify-content: center;
+    justify-self: center;
+}
+
+/* Signal, Battery, Current */
+.info__item__topBar {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row-start: 1;
+    grid-row-end: 1;
+    background-color: var(--dark-bg3);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+}
+
+.info__item__topBar__inner {
+    padding: 0;
+    width: 30%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "battery current";
+    align-items: center;
+    align-content: center;
+    justify-items: center;
+    justify-content: center;
+}
+.info__item__others {
+    padding-block-end: 2em;
+    padding: 0.5rem 1.5rem;
+    border-radius: 1rem;
+}
+
+.info__item__others__signal {
+    grid-area: signal;
+}
+
+.info__item__others__batteryIndicator {
+    grid-area: battery;
+}
+
+.info__item__others__current {
+    grid-area: current;
+}
+
+/* Text on the items */
+
+.textInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.label {
+    float: left;
+    color: var(--white2);
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+/* Container */
+.container {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+    justify-content: center;
+    align-content: center;
+}
+
+img {
+    width: 1.4rem;
+    height: 1.4rem;
+}

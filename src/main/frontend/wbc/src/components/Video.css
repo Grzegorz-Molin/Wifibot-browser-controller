@@ -1,0 +1,29 @@
+.video {
+    grid-area: video;
+
+    width: auto;
+    height: auto;
+    position: relative;
+    border-radius: 1.8em;
+    padding: 1em;
+}
+
+.video__wrapper {
+    position: relative;
+    max-height: 100%;
+    overflow: hidden; /* Add this line to hide any overflowing content */
+}
+
+.video__wrapper img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.overlaying__div.overlaying__div__bottom__radius {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}

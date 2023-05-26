@@ -1,0 +1,86 @@
+.toggleContainer {
+    --switch-height: 1.5em;
+    --switch-width: 3.5em;
+
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Text label */
+
+strong {
+    font-size: 1.2em;
+    font-weight: 600;
+    background: -webkit-linear-gradient(45deg, var(--green3), var(--green4));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+
+    line-height: 30px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+label {
+    position: relative;
+    display: inline-block;
+    width: var(--switch-width);
+    height: var(--switch-height);
+}
+
+.toggleContainer input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+span {
+    position: absolute;
+    cursor: pointer;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    width: var(--switch-width);
+    background: var(--dark-bg5);
+    transition: all 0.3s;
+    border-radius: var(--switch-height);
+}
+
+span:before {
+    position: absolute;
+    content: "";
+    height: var(--switch-height);
+    width: var(--switch-height);
+    left: 3px;
+    bottom: 2px;
+    background: var(--white2);
+    border-radius: 50%;
+    transition: all 0.3s;
+}
+
+input:checked + span {
+    background: linear-gradient(to right, var(--green1), var(--green2));
+}
+
+input:checked + span:before {
+    transform: translateX(1.6em);
+    background: var(--white1);
+}
+
+.state {
+    position: absolute;
+    top: 0.7em;
+    font-size: 0.6em;
+    font-weight: 600;
+    transition: all 0.3s;
+    cursor: pointer;
+}
+.text.on {
+    left: 0.5em;
+}
+
+.text.off {
+    left: calc(var(--switch-width) - 0.5em);
+}

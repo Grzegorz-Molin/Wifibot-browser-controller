@@ -24,16 +24,13 @@ public class RobotData {
     }
 
     public void setAllData(byte[] buffer) {
-        // Max speed = 32,767 / 2448 ≈ 13.388 wheel turns per second
         speedFrontLeft = ((buffer[1] << 8) | (buffer[0] & 0xFF));
         if (speedFrontLeft > 32767) {
             speedFrontLeft = speedFrontLeft - 65536;
         }
-        batLevel = buffer[2] & 0xFF;  // //Bat Volt:10.1V 1.28V 404/4->101 ---> Definitely NON linear --> max: 3,23V=255, other: 1,28V=101
-        irLeftFront = buffer[3] & 0xFF; // max: 3.3V=255, other: 2V=156 ---> Linear
-        irLeftBack = buffer[4] & 0xFF;  // max: 3.3V=255, other: 2V=156 ---> Linear
-        // Odometry - 12ppr x 4 x 51 gear box = 2448 tics/wheel turn => max: 2,147,483,647 tics
-        // => number of wheel turns=odometryLeft / 2448
+        batLevel = buffer[2] & 0xFF;
+        irLeftFront = buffer[3] & 0xFF;
+        irLeftBack = buffer[4] & 0xFF;
         odometryLeft = (((long) buffer[8] << 24) | ((long) buffer[7] << 16) | ((long) buffer[6] << 8) | (long) buffer[5]) & 0xFF;
         speedFrontRight = ((buffer[10] << 8) | (buffer[9] & 0xFF));
         if (speedFrontRight > 32767) {
@@ -42,9 +39,8 @@ public class RobotData {
         irRightFront = buffer[11] & 0xFF;
         irRightBack = buffer[12] & 0xFF;
         odometryRight = (((long) buffer[16] << 24) | ((long) buffer[15] << 16) | ((long) buffer[14] << 8) | (long) buffer[13]) & 0xFF;
-        current = buffer[17]; // I [amperes]: (current*0.194) -37.5
+        current = buffer[17];
         version = buffer[18];
-//        System.out.println("[Server] Data set:"+ this);
     }
 
     public Map<String, Object> getAllData() {

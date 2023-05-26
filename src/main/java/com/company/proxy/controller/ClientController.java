@@ -1,5 +1,7 @@
 package com.company.proxy.controller;
 
+import com.company.proxy.CustomContextAware;
+import com.company.proxy.Main;
 import com.company.proxy.model.Message;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -8,12 +10,9 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static com.company.proxy.Main.*;
 
 @Controller
 public class ClientController {
@@ -26,7 +25,8 @@ public class ClientController {
     @SendTo("/topic/bot") // = /topic/bot ---> Sending
     public Message clientRequestForConnectingToRobot() throws IOException {
         System.out.println("[Client] Connect to the robot");
-        boolean result = connectToRobot();
+        Main main = CustomContextAware.getContext().getBean(Main.class);
+        boolean result = main.connectToRobot();
         String returnMessage = "[Server] [Robot ";
         if (result) returnMessage += "connected]";
         else returnMessage += "not connected]";
@@ -38,7 +38,8 @@ public class ClientController {
     @SendTo("/topic/bot")
     public Message clientRequestFroDisconnectingFromRobot() throws IOException {
         System.out.println("[Client] Disconnect from robot");
-        disconnectFromRobot();
+        Main main = CustomContextAware.getContext().getBean(Main.class);
+        main.disconnectFromRobot();
         return new Message("[Server] [Robot disconnected]");
     }
 
@@ -46,18 +47,18 @@ public class ClientController {
     @MessageMapping("/commandRobot")
     @SendTo("/topic/bot")
     public Message clientCommand(Message message) throws IOException {
-        commandRobot(message.getMessage());
+        Main main = CustomContextAware.getContext().getBean(Main.class);
+        main.commandRobot(message.getMessage());
         return new Message("[Server] ");
     }
 
     @MessageMapping("/setProperty")
     @SendTo("/topic/setPropertyResponse")
     public Message clientChangeProperty(Message message) {
-        System.out.println("--- changin property ---");
         String messageInString = message.getMessage();
-//        System.out.println("Message in strng: " + messageInString);
         String property = "";
         boolean success = false;
+        Main main = CustomContextAware.getContext().getBean(Main.class);
 
         Pattern pattern = Pattern.compile("\\b(\\w+):(\\w+)\\b");
         Matcher matcher = pattern.matcher(messageInString);
@@ -65,20 +66,18 @@ public class ClientController {
         while (matcher.find()) {
             if (!matcher.group(1).equals("robotIP")) {
                 property = matcher.group(1);
-                int value = Integer.parseInt(matcher.group(2));
-                success = setProperty(property, value); // Call the setProperty method
+                String value = matcher.group(2);
+                success = main.setProperty(property, value);
             } else {
                 Pattern patternIP = Pattern.compile("\\b(\\w+):(([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3})\\.([0-9]{1,3}))\\b");
                 Matcher matcherIP = patternIP.matcher(messageInString);
                 while (matcherIP.find()) {
                     property = matcherIP.group(1);
                     String valueInString = matcherIP.group(2);
-                    success = setProperty(property, valueInString);
+                    success = main.setProperty(property, valueInString);
                 }
             }
         }
-
-//        System.out.println("Seting property [int] '" + property + "' has been '" + success + "'\n");
         return new Message(String.valueOf(success));
     }
 
@@ -87,3 +86,24 @@ public class ClientController {
         simpMessagingTemplate.convertAndSend("/topic/bot", data);
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
