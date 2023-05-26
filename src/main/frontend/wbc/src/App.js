@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 
-// ---------------------------------------------------------------------------------------
 var stompClient = null;
 
 export default function App() {
@@ -41,20 +40,9 @@ export default function App() {
         version: 0,
     });
 
-    useEffect(() => {
-        console.log("Video: " + videoIsConnected);
-    }, [videoIsConnected]);
-
     // ---------------------------------------------------------------------------------------
 
-    // DATA
-    // useEffect(() => {
-    //     console.log("DATA: " + JSON.stringify(data, null, 4));
-    //     console.log("data.left.odometry: " + data.left.odometry);
-    // }, [data]);
-
     function parseResponse(response) {
-        // console.log("[parseResponse]: ---> " + JSON.stringify(response, 0, 4));
         const odometryLeftBigger =
             response.odometryLeft > data.odometryLeft
                 ? response.odometryLeft
@@ -63,15 +51,11 @@ export default function App() {
             response.odometryRight > data.odometryRight
                 ? response.odometryRight
                 : data.odometryRight;
-
-        console.log("\nold - left: "+data.odometryLeft + "right: "+data.odometryRight);
-        console.log("new - left: "+response.odometryLeft + "right: "+response.odometryRight);
-        console.log("final - left: " + odometryLeftBigger + ", right: " + odometryRightBigger);
         setData((prevData) => ({
             ...prevData,
             speedFrontLeft: response.speedFrontLeft,
             speedFrontRight: response.speedFrontRight,
-            batLevel: response.batLevel, // assuming battery level is same for left and right
+            batLevel: response.batLevel,
             current: response.current,
             odometryLeft: odometryLeftBigger,
             odometryRight: odometryRightBigger,
@@ -81,15 +65,10 @@ export default function App() {
             irRightBack: response.irRightBack,
             version: response.version,
         }));
-
     }
 
-    useEffect(()=> {
-        console.log("data: "+JSON.stringify(data, 0, 2))
-    }, [data])
-
     // --- SOCK JS and CONNECTIVITY------------------------------------------------------------------------------------
-
+    // Connecting first to the proxy
     function connectProxySocket() {
         const proxyUrl =
             "http://" +
@@ -103,15 +82,16 @@ export default function App() {
         stompClient.connect({}, onConnected, onError);
     }
 
+    // Disconnecting from proxy (and for safety also from the robot)
     function disconnectProxySocket() {
         if (stompClient !== null) {
             disconnectFromRobot();
             stompClient.disconnect();
         }
         setProxyIsConnected(false);
-        console.log("[Disconnected]");
     }
 
+    // Proxy is connected, now starting communication with the robot
     function connectToRobot() {
         setPropertyOnProxy("robotIP", proxyProperties.robotIP);
         setPropertyOnProxy(
@@ -125,37 +105,35 @@ export default function App() {
         stompClient.send("/app/connectToRobot", {});
     }
 
+    // Stopping communication with robot, proxy connections stays
     function disconnectFromRobot() {
-        console.log("Disconnecting from robot...");
         stompClient.send("/app/disconnectFromRobot", {});
     }
 
+    // Next 3 callback functions are invoked on specific events
+    // onConnected() is invoked after establishming connection to the proxy server
     function onConnected() {
         setProxyIsConnected(true);
         connectToRobot();
         stompClient.subscribe("/topic/bot", onMessageReceived);
     }
 
+    // Invoked when message from proxy arrives
     function onMessageReceived(payload) {
         let payloadData = JSON.parse(payload.body);
 
-        // console.log("---> [server] " + JSON.stringify(payloadData, 0, 2));
         if (payloadData.message != null) {
             if (payloadData.message === "[Server] [Robot not connected]") {
-                console.log("Robot NOT connected, disconnecting from proxy");
                 disconnectProxySocket();
             } else if (payloadData.message === "[Server] [Robot connected]") {
-                // nothing
+                // do nothing
             }
         } else {
-            console.log(
-                "'Message' IS empty, parsing reponse ..." + payloadData
-            );
             parseResponse(payloadData);
         }
-        // console.log("Message received: " + JSON.stringify(payloadData));
     }
 
+    // Invoked on any error of the frontend - proxy server connection
     function onError(err) {
         console.log(err);
         console.log(
@@ -164,9 +142,8 @@ export default function App() {
         setProxyIsConnected(false);
     }
 
+    // Commanding robot forward, backward, etc.
     function commandRobot(commandToSend) {
-        // updateSpeedIndicator(commandToSend);
-        updateSpeedIndicator(commandToSend);
         if (stompClient !== null) {
             stompClient.send(
                 "/app/commandRobot",
@@ -199,8 +176,6 @@ export default function App() {
                 "/topic/setPropertyResponse",
                 (payload) => {
                     let payloadData = JSON.parse(payload.body);
-                    console.log("[Server] result is: " + payloadData.message);
-
                     if (!payloadData.message) {
                         reject(`setProperty on proxy failed `);
                     } else {
@@ -214,6 +189,7 @@ export default function App() {
         });
     }
 
+    // Setting useState property here in App.js
     function setProperty(property, value) {
         setPropertyOnProxy(property, value)
             .then((response) => {
@@ -239,18 +215,14 @@ export default function App() {
                     default:
                         break;
                 }
-                console.log(
-                    `Property '${property}' set to value '${value}' - '${response}'`
-                );
             })
             .catch((error) => {
-                console.error(error);
+                console.log(error);
             });
     }
 
     // --- KEY LISTENERS ---------------------------------------------------------------------------------
     function detectKeyDown(e) {
-        console.log("Clicked: " + e.key);
         if (e.key === "w") commandRobot("forward");
         else if (e.key === "s") commandRobot("backward");
         else if (e.key === "a") commandRobot("left");
@@ -258,53 +230,11 @@ export default function App() {
     }
 
     function detectKeyUp(e) {
-        console.log("Lifted: " + e.key);
-        setSpeed({
-            left: 0,
-            right: 0,
-        });
         if (e.key === "w") commandRobot("nothing");
         else if (e.key === "s") commandRobot("nothing");
         else if (e.key === "a") commandRobot("nothing");
         else if (e.key === "d") commandRobot("nothing");
     }
-
-    const [speed, setSpeed] = useState({
-        left: 0,
-        right: 0,
-    });
-
-    function updateSpeedIndicator(command) {
-        // console.log("CommandToSend: " + command);
-        switch (command) {
-            case "forward":
-                setSpeed({
-                    left: proxyProperties.speed,
-                    right: proxyProperties.speed,
-                });
-                break;
-            case "backward":
-                setSpeed({
-                    left: -proxyProperties.speed,
-                    right: -proxyProperties.speed,
-                });
-                break;
-            case "left":
-                setSpeed({
-                    left: -proxyProperties.speed,
-                    right: proxyProperties.speed,
-                });
-                break;
-            case "right":
-                setSpeed({
-                    left: proxyProperties.speed,
-                    right: -proxyProperties.speed,
-                });
-                break;
-        }
-    }
-
-    // --- OTHER METHODS ------------------------------------------------------------------------------------
 
     useEffect(() => {
         if (proxyIsConnected) {
@@ -318,6 +248,8 @@ export default function App() {
         };
     }, [proxyIsConnected]);
 
+    // --- OTHER METHODS ------------------------------------------------------------------------------------
+
     function handleProxyChange() {
         proxyIsConnected ? disconnectProxySocket() : connectProxySocket();
         setProxyIsConnected(!proxyIsConnected);
@@ -327,41 +259,22 @@ export default function App() {
         setVideoIsConnected(!videoIsConnected);
     }
 
+    // Changing "proxy" properties first here - these that need to be set BEFORE connection with the robot starts
     function handleLocalFirstPropertiesChange(typeOfProperty, value) {
-        console.log("--- Local first properties has been changed ---");
-        console.log(
-            `--> Property '${typeOfProperty}' setting to value '${value}'`
-        );
         setProxyProperties((prevState) => ({
             ...prevState, // copy existing object
             [typeOfProperty]: value,
         }));
     }
+
+    // Setting propertie right on the proxy - these that are changed DURING the connection with the robot
     function handleProxyFirstPropertiesChange(typeOfProperty, value, min, max) {
-        // If it is not speed or any of the interval, we need to set the ustate var value immediately
-        // Thnks to this, StompJS will be able to use these values on starting the connection
-        console.log("--- Proxy first Properties has been changed ---");
         var temp = value;
         if (value < min) {
-            console.log(
-                " --->>> value is too small ('" +
-                    value +
-                    "'). Changing it to min '" +
-                    min +
-                    "'"
-            );
             temp = min;
         } else if (value > max) {
-            console.log(
-                " --->>> value is too big ('" +
-                    value +
-                    "'). Changing it to max '" +
-                    max +
-                    "'"
-            );
             temp = max;
         }
-
         setProperty(typeOfProperty, temp);
     }
 
@@ -377,7 +290,6 @@ export default function App() {
                 disconnectProxySocket={() => disconnectProxySocket()}
                 handleProxyChange={handleProxyChange}
                 handleVideoChange={handleVideoChange}
-                // ---
                 proxyProperties={proxyProperties}
                 handleProxyFirstPropertiesChange={
                     handleProxyFirstPropertiesChange

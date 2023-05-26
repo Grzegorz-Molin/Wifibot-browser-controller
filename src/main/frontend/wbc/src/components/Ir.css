@@ -31,3 +31,8 @@
     transition: all 0.3s;
     border-radius: 0.7em;
 }
+
+.overlaying__div__bottom__radius {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}

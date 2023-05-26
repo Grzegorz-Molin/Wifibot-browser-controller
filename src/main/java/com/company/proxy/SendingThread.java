@@ -1,15 +1,9 @@
 package com.company.proxy;
 
-import ch.qos.logback.core.joran.spi.SaxEventInterpretationContext;
-import com.company.proxy.controller.ClientController;
-import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.util.Arrays;
 
 import static com.company.proxy.Main.print;
 import static com.company.proxy.Main.printAdvice;
@@ -21,9 +15,7 @@ public class SendingThread extends Thread{
     private DatagramSocket socket;
     private InetAddress address;
 
-    // Sending
     private byte[] dataToSend;
-    private String command;
     private int ROBOTSPEED = 130;
 
     public void setUpThread(DatagramSocket socket, InetAddress address, int sendingPort, int sendingInterval) {
@@ -32,12 +24,12 @@ public class SendingThread extends Thread{
         this.address = address;
         this.sendingPort = sendingPort;
         this.sendingInterval = sendingInterval;
-        this.command = "nothing";
 
         this.dataToSend = giveMeNothing();
         print("Sending thread set up!");
     }
 
+    // Main thread method to be run in cycle
     @Override
     public void run(){
         while (shouldISend){
@@ -73,17 +65,16 @@ public class SendingThread extends Thread{
         address = null;
     }
 
-    //    ROBOT COMMANDS
+    // Robot commands
     public void forward() {
-//        System.out.println("Forward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
-        newCommand[0] = (byte) 0xff;     //255 (= -1)
-        newCommand[1] = (byte) 0x07;     //
+        newCommand[0] = (byte) 0xff;
+        newCommand[1] = (byte) 0x07;
         newCommand[2] = (byte) ROBOTSPEED;
         newCommand[3] = (byte) (ROBOTSPEED >> 8);
         newCommand[4] = (byte) ROBOTSPEED;
         newCommand[5] = (byte) (ROBOTSPEED >> 8);
-        newCommand[6] = (byte) 0x53;     //forward
+        newCommand[6] = (byte) 0x53;
 
         CRC16 crc = new CRC16();
         for (int i = 1; i < 7; i++) {
@@ -93,37 +84,29 @@ public class SendingThread extends Thread{
         newCommand[7] = (byte) crc.getValue();
         newCommand[8] = (byte) (crc.getValue() >> 8);
         setDataToSend(newCommand);
-        setCommand("forward");
-    }
-
-    public void setCommand(String command) {
-        this.command = command;
     }
 
     public void backward() {
-//        System.out.println("Backward: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
-        newCommand[0] = (byte) 0xff;        //255
-        newCommand[1] = (byte) 0x07;        //size
-        newCommand[2] = (byte) ROBOTSPEED;    //left ROBOTSPEED
+        newCommand[0] = (byte) 0xff;
+        newCommand[1] = (byte) 0x07;
+        newCommand[2] = (byte) ROBOTSPEED;
         newCommand[3] = (byte) (ROBOTSPEED >> 8);
-        newCommand[4] = (byte) ROBOTSPEED;    //right ROBOTSPEED
+        newCommand[4] = (byte) ROBOTSPEED;
         newCommand[5] = (byte) (ROBOTSPEED >> 8);
-        newCommand[6] = (byte) 0x03;        //backward
+        newCommand[6] = (byte) 0x03;
 
         CRC16 crc = new CRC16();
         for (int i = 1; i < 7; i++) {
             crc.update(newCommand[i]);
         }
 
-        newCommand[7] = (byte) crc.getValue();        //crc
+        newCommand[7] = (byte) crc.getValue();
         newCommand[8] = (byte) (crc.getValue() >> 8);
         setDataToSend(newCommand);
-        setCommand("backward");
     }
 
     public void direction(String dir) {
-//        System.out.println("Rotate " + dir + ", ROBOTSPEED: " + ROBOTSPEED);
         byte[] newCommand = new byte[9];
         newCommand[0] = (byte) 0xff;
         newCommand[1] = (byte) 0x07;
@@ -145,7 +128,6 @@ public class SendingThread extends Thread{
         newCommand[7] = (byte) crc.getValue();
         newCommand[8] = (byte) (crc.getValue() >> 8);
         setDataToSend(newCommand);
-        setCommand(dir);
     }
 
     public void nothing() {
@@ -166,7 +148,6 @@ public class SendingThread extends Thread{
         newCommand[7] = (byte) crc.getValue();
         newCommand[8] = (byte) (crc.getValue() >> 8);
         setDataToSend(newCommand);
-        setCommand("nothing");
     }
 
     public byte[] giveMeNothing() {
@@ -189,7 +170,6 @@ public class SendingThread extends Thread{
         return newCommand;
     }
 
-    // Other methods
 
     public void commandRobot(String message) {
         if (message.equals("nothing")) nothing();
@@ -200,7 +180,7 @@ public class SendingThread extends Thread{
     }
 
 
-
+    // Setters
     public void setShouldISend(boolean shouldISend) {
         this.shouldISend = shouldISend;
     }
@@ -209,8 +189,8 @@ public class SendingThread extends Thread{
         this.dataToSend = dataToSend;
     }
 
-    public boolean setSendingInterval(int sendingInterval) {
-        this.sendingInterval = sendingInterval;
+    public boolean setSendingInterval(int newInterval) {
+        this.sendingInterval = newInterval;
         return true;
     }
 

@@ -1,17 +1,14 @@
 import React from "react";
-import ReactPlayer from "react-player";
 import "./Video.css";
-import Ir from "./Ir";
 
 function Video({ robotIP, videoIsConnected, setVideoIsConnected }) {
-    const streamUrl = "http://" + robotIP + "/?action=stream";
+    const streamUrl = "http://" + robotIP + ":8080/?action=stream";
 
-    // console.log("[video] stream url is:"+streamUrl);
     return (
         <div className="component video">
             <div className="video__wrapper">
                 {videoIsConnected ? (
-                    <img src={streamUrl} alt={streamUrl} />
+                    <img src={streamUrl} alt={`video stream from: ${streamUrl}`}/>
                 ) : (
                     <p>Video not connected</p>
                 )}

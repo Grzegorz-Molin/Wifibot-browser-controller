@@ -10,12 +10,13 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    // Creating an endpoint for client to connect: localhost:<PORT_NUMBER>/ws
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Here our client connects to the socket: localhost:<PORT_NUMBER>/ws
         registry.addEndpoint("/ws").setAllowedOriginPatterns("*").withSockJS();
     }
 
+    // Setting prefixes
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic"); // Sending

@@ -23,6 +23,7 @@ public class RobotData {
         System.out.println("[Server] Empty robot data created");
     }
 
+    // Converting raw data from the robot (in the form of byte[] array) to specific properties of this class
     public void setAllData(byte[] buffer) {
         speedFrontLeft = ((buffer[1] << 8) | (buffer[0] & 0xFF));
         if (speedFrontLeft > 32767) {
@@ -43,6 +44,7 @@ public class RobotData {
         version = buffer[18];
     }
 
+    // Converting the data to Map<String, Object> for sending to the client and easier parsing on the frontend
     public Map<String, Object> getAllData() {
         Map<String, Object> dataMap = new HashMap<>();
 
@@ -76,56 +78,5 @@ public class RobotData {
                 ", odometryRight=" + odometryRight +
                 ", current=" + current +
                 ", version=" + version;
-    }
-
-    public String irToString() {
-        return "irLeftFront= " + irLeftFront +
-                ", irLefBack=" + irLeftBack +
-                ", irRightFront="+irRightFront +
-                ", irRightBack="+irRightBack;
-    }
-
-    public void setSpeedFront(int speedFrontLeft) {
-        this.speedFrontLeft = speedFrontLeft;
-    }
-
-    public void setBatLevel(int batLevel) {
-        this.batLevel = batLevel;
-    }
-
-    public void setIr1(int irLeftFront) {
-        this.irLeftFront = irLeftFront;
-    }
-
-    public void setIr2(int irLeftBack) {
-        this.irLeftBack = irLeftBack;
-    }
-
-    public void setOdometry(long odometryLeft) {
-        this.odometryLeft = odometryLeft;
-    }
-
-    public void setSpeedFront2(int speedFrontRight) {
-        this.speedFrontRight = speedFrontRight;
-    }
-
-    public void setIr3(int irRightFront) {
-        this.irRightFront = irRightFront;
-    }
-
-    public void setIr4(int irRightBack) {
-        this.irRightBack = irRightBack;
-    }
-
-    public void setOdometry2(long odometryRight) {
-        this.odometryRight = odometryRight;
-    }
-
-    public void setCurrent(int current) {
-        this.current = current;
-    }
-
-    public void setVersion(int version) {
-        this.version = version;
     }
 }

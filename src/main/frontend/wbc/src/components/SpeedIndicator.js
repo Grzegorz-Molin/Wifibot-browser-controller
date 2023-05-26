@@ -5,6 +5,7 @@ import styled, { keyframes } from "styled-components";
 const SpeedIndicator = React.memo(({ speedInTics }) => {
     const ROTATION_TIME = 0.3;
     const FULL_ROTATION_ANGLE = 135;
+    
     // Conversion of speed from range 0-255 to percent 0-100%
     var speedInPercent = (speedInTics * 100) / 255;
     speedInPercent = speedInPercent.toFixed(0);
@@ -14,8 +15,6 @@ const SpeedIndicator = React.memo(({ speedInTics }) => {
     rotationAmount = rotationAmount.toFixed(0);
 
     // Color of bar
-    //Beginning value: rgb(255, 234, 98) --- Finish value: rgb(255, 144, 98)
-    //  --> the only difference is in GREEN value = 90units 63, 159, 106 --> 77, 120, 229
     var greenColor1 = 159;
     var greenColor2 = 120;
     var greenColorDifference = greenColor1 - greenColor2;
@@ -26,7 +25,6 @@ const SpeedIndicator = React.memo(({ speedInTics }) => {
     ).toFixed(0);
     var greenColorFinal = greenColor1 - greenColorDelta;
     var barColor = "rgb(70, " + greenColorFinal + ", 200)";
-    // console.log("Bar color:"+barColor);
 
     // Rotation styles of hiding bars
     const progressStyle1 = {
@@ -38,7 +36,6 @@ const SpeedIndicator = React.memo(({ speedInTics }) => {
         transform: `rotate(${rotationAmount > 0 ? rotationAmount : 0}deg)`,
         transition: `all 0.3s`,
     };
-    // console.log("style2:" + JSON.stringify(progressStyle2));
 
     return (
         <div class="speedIndicator">
@@ -65,26 +62,6 @@ const SpeedIndicator = React.memo(({ speedInTics }) => {
     );
 });
 
-// ---------------------------------------------------------------------------------------------
-// Rotation change
-const rotateNeedle = (rotationAmount) => keyframes`
-    0% {
-        transform: rotate(0deg);
-    } 
-    100% { 
-        transform: rotate(${rotationAmount}deg);
-    }
-`;
-
-const rotateProgress = (rotationAmount) => keyframes`
-    0% {
-        transform: rotate(0deg)
-    }
-    100% { 
-        transform: rotate(${rotationAmount}deg);
-    }
-`;
-
 // Color change
 const rotateBar = (rotationAmount, finalColor) => {
     if (rotationAmount > 0)
@@ -110,8 +87,7 @@ const rotateBar = (rotationAmount, finalColor) => {
     `;
 };
 
-// Styled components
-
+// Styled component
 const Bar = styled.div`
     & {
         position: absolute;

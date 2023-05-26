@@ -1,7 +1,6 @@
 .controls {
     grid-area: controls;
     align-self: start;
-    overflow-y: auto;
 
     display: grid;
     grid-template-rows: auto auto 1fr 2fr auto;

@@ -12,25 +12,23 @@ import static java.lang.System.out;
 
 @SpringBootApplication
 public class Main {
-
     private String robotIP = "192.168.1.106";
 
+    static FetchingThread fetchingThread;
     private int fetchingPort = 15010;
     private int fetchingInterval = 250;
 
+    static SendingThread sendingThread;
     private int sendingPort = 15000;
-    private int sendingInterval = 50;
-
-    public static ConfigurableApplicationContext context;
+    private int sendingInterval = 25;
 
     static DatagramSocket socket;
     static DatagramSocket sendingSocket;
     static InetAddress address;
 
-    // Threads
-    static FetchingThread fetchingThread;
-    static SendingThread sendingThread;
+    public static ConfigurableApplicationContext context;
 
+    // Starting communication with robot - initialize sending and receiving threads
     public Boolean connectToRobot() {
         boolean result = false;
         try {
@@ -97,7 +95,7 @@ public class Main {
         return result;
     }
 
-
+    // Stop communication with the robot
     public void disconnectFromRobot() throws IOException {
         if (sendingThread != null) {
             sendingThread.terminateConnection();
@@ -111,6 +109,7 @@ public class Main {
         print("Socket closed");
     }
 
+    // Robot commands - forward, backward, ...
     public void commandRobot(String message) {
         if (message.equals("nothing")) sendingThread.nothing();
         else if (message.equals("forward")) sendingThread.forward();
@@ -119,6 +118,7 @@ public class Main {
         else if (message.equals("right")) sendingThread.direction("right");
     }
 
+    // Method for setting some proxy properties, like robot speed, sending interval etc.
     public Boolean setProperty(String property, String value) {
         print("property:  " + property + ", value " + value);
         Boolean result = false;
@@ -147,6 +147,7 @@ public class Main {
         return result;
     }
 
+    // Easier printing methods ( print() can be used for debug purposes)
     public static void print(String message) {
         out.println("[Server] " + message);
     }
@@ -166,9 +167,13 @@ public class Main {
         return true;
     }
 
-    public boolean setFetchingInterval(int fetchingInterval) {
-        this.fetchingInterval = fetchingInterval;
-        return true;
+    public boolean setFetchingInterval(int newInterval) {
+        this.fetchingInterval = newInterval;
+        boolean result = true;
+        if (fetchingThread != null) {
+            result = fetchingThread.setFetchingInterval(newInterval);
+        }
+        return result;
     }
 
     public boolean setSendingPort(int sendingPort) {
@@ -176,9 +181,13 @@ public class Main {
         return true;
     }
 
-    public boolean setSendingInterval(int sendingInterval) {
-        this.sendingInterval = sendingInterval;
-        return true;
+    public boolean setSendingInterval(int newInterval) {
+        this.sendingInterval = newInterval;
+        boolean result = true;
+        if (sendingThread != null) {
+            result = sendingThread.setSendingInterval(newInterval);
+        }
+        return result;
     }
 
     // MAIN

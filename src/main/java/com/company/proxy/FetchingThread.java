@@ -35,6 +35,7 @@ public class FetchingThread extends Thread {
         print("[Server] Reading thread made up");
     }
 
+    // Main thread method to be run in cycle
     @Override
     public void run() {
         while (shoulICommunicate) {
@@ -75,6 +76,12 @@ public class FetchingThread extends Thread {
             setShouldICommunicate(false);
             socket.disconnect();
         }
+    }
+
+    // Setters
+    public boolean setFetchingInterval(int newInterval){
+        this.fetchingInterval = newInterval;
+        return true;
     }
 
     public void setShouldICommunicate(boolean b) {

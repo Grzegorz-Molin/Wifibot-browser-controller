@@ -20,9 +20,9 @@ public class ClientController {
     @Autowired
     private SimpMessagingTemplate simpMessagingTemplate;
 
-
-    @MessageMapping("/connectToRobot") // = app/connectToRobot ---> Receiving
-    @SendTo("/topic/bot") // = /topic/bot ---> Sending
+    // Initialize communication with robot
+    @MessageMapping("/connectToRobot")
+    @SendTo("/topic/bot")
     public Message clientRequestForConnectingToRobot() throws IOException {
         System.out.println("[Client] Connect to the robot");
         Main main = CustomContextAware.getContext().getBean(Main.class);
@@ -34,6 +34,7 @@ public class ClientController {
         return new Message(returnMessage);
     }
 
+    // Disconnect from robot, stop every thread
     @MessageMapping("/disconnectFromRobot")
     @SendTo("/topic/bot")
     public Message clientRequestFroDisconnectingFromRobot() throws IOException {
@@ -52,6 +53,7 @@ public class ClientController {
         return new Message("[Server] ");
     }
 
+    // Setting some proxy property
     @MessageMapping("/setProperty")
     @SendTo("/topic/setPropertyResponse")
     public Message clientChangeProperty(Message message) {
@@ -81,7 +83,7 @@ public class ClientController {
         return new Message(String.valueOf(success));
     }
 
-
+    // Sending data from the robot to the client
     public void sendRobotDataToClient(Map<String, Object> data) {
         simpMessagingTemplate.convertAndSend("/topic/bot", data);
     }

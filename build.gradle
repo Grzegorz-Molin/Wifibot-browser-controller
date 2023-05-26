@@ -14,7 +14,7 @@ dependencies {
 
 
 group = 'com.company'
-version = '0.0.1-SNAPSHOT'
+version = 'wbc_1.0.0'
 sourceCompatibility = '17'
 
 configurations {
@@ -28,15 +28,10 @@ repositories {
 }
 
 node {
-	download = false
+	download = true
 
-	// indentify working directory in project
 	workDir = file("${project.projectDir}/src/main/frontend/wbc/nodejs")
-
-	// NPM work directory
 	npmWorkDir = file("${project.projectDir}/src/main/frontend/wbc/npm")
-
-	// node modules directory
 	nodeModulesDir = file("${project.projectDir}/src/main/frontend/wbc")
 }
 
@@ -60,3 +55,4 @@ task copyToFrontend(type: Copy){
 appNpmBuild.dependsOn(appNpmInstall)
 copyToFrontend.dependsOn(appNpmBuild)
 compileJava.dependsOn(copyToFrontend)
+
